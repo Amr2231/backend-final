@@ -175,7 +175,7 @@ exports.checkConflict = async ({ doctor_id, appointment_date, appointment_time, 
   let sql = `
     SELECT a.*, CONCAT(p.first_name,' ',p.last_name) AS patient_name
     FROM Appointments a
-    JOIN Patients p ON a.national_id = p.national_id
+    JOIN patients p ON a.national_id = p.national_id
     WHERE a.doctor_id = ? AND a.appointment_date = ?
       AND a.status NOT IN ('Cancelled', 'No Show', 'Completed')`;
   const params = [doctor_id, appointment_date];

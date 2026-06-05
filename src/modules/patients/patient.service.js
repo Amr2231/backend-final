@@ -177,7 +177,7 @@ exports.registerPatientWithStudy = async (data) => {
 
   // ===== DUPLICATE CHECK =====
   const [existing] = await db.query(
-    "SELECT national_id FROM Patients WHERE national_id = ?",
+    "SELECT national_id FROM patients WHERE national_id = ?",
     [national_id],
   );
 
@@ -186,7 +186,7 @@ exports.registerPatientWithStudy = async (data) => {
   }
 
   const [phoneExists] = await db.query(
-    "SELECT national_id FROM Patients WHERE phone_number = ?",
+    "SELECT national_id FROM patients WHERE phone_number = ?",
     [phone_number],
   );
 
@@ -219,7 +219,7 @@ exports.registerPatientWithStudy = async (data) => {
 
     // ===== INSERT PATIENT =====
     await conn.query(
-      `INSERT INTO Patients
+      `INSERT INTO patients
       (
         national_id,
         first_name,
@@ -325,7 +325,7 @@ exports.updatePatient = async (national_id, data) => {
 
     const [patient] = await connection.query(
       `SELECT *
-       FROM Patients
+       FROM patients
        WHERE national_id=?`,
       [national_id],
     );
@@ -338,7 +338,7 @@ exports.updatePatient = async (national_id, data) => {
     if (new_national_id && new_national_id !== national_id) {
       const [exists] = await connection.query(
         `SELECT national_id
-         FROM Patients
+         FROM patients
          WHERE national_id=?`,
         [new_national_id],
       );
@@ -350,7 +350,7 @@ exports.updatePatient = async (national_id, data) => {
       await connection.query(`SET FOREIGN_KEY_CHECKS=0`);
 
       await connection.query(
-        `UPDATE Patients
+        `UPDATE patients
          SET national_id=?
          WHERE national_id=?`,
         [new_national_id, national_id],
@@ -401,7 +401,7 @@ exports.updatePatient = async (national_id, data) => {
       values.push(national_id);
 
       await connection.query(
-        `UPDATE Patients
+        `UPDATE patients
          SET ${fields.join(",")}
          WHERE national_id=?`,
         values,
@@ -465,7 +465,7 @@ exports.deletePatient = async (national_id) => {
 
   const [patient] = await db.query(
     `SELECT national_id, is_active
-     FROM Patients
+     FROM patients
      WHERE national_id = ?`,
     [national_id],
   );
@@ -507,7 +507,7 @@ exports.deletePatient = async (national_id) => {
   }
 
   await db.query(
-    `UPDATE Patients
+    `UPDATE patients
      SET is_active = 0
      WHERE national_id = ?`,
     [national_id],
@@ -555,7 +555,7 @@ exports.queryPatients = async (options) => {
       s.study_date,
       s.status
 
-    FROM Patients p
+    FROM patients p
 
     LEFT JOIN users u
       ON p.doctor_id = u.user_id
@@ -569,7 +569,7 @@ exports.queryPatients = async (options) => {
   let countQuery = `
     SELECT COUNT(DISTINCT p.national_id) AS total
 
-    FROM Patients p
+    FROM patients p
 
     LEFT JOIN users u
       ON p.doctor_id = u.user_id
@@ -674,7 +674,7 @@ exports.reassignDoctor = async (
   // ===== CHECK PATIENT =====
   const [patient] = await db.query(
     `SELECT national_id, is_active
-     FROM Patients
+     FROM patients
      WHERE national_id = ?`,
     [national_id],
   );
@@ -727,7 +727,7 @@ exports.reassignDoctor = async (
     await conn.beginTransaction();
 
     await conn.query(
-      `UPDATE Patients SET doctor_id = ? WHERE national_id = ?`,
+      `UPDATE patients SET doctor_id = ? WHERE national_id = ?`,
       [doctor_id, national_id],
     );
 
@@ -838,7 +838,7 @@ SELECT
     s.status,
     r.report_status
 
-  FROM Patients p
+  FROM patients p
 
   JOIN Studies s
     ON p.national_id = s.national_id
@@ -860,7 +860,7 @@ SELECT
     `
     SELECT COUNT(*) AS total
 
-    FROM Patients p
+    FROM patients p
 
     JOIN Studies s
       ON p.national_id = s.national_id
@@ -941,7 +941,7 @@ exports.getHistoricalPatients = async (page = 1, limit = 10, options = {}) => {
       s.study_date,
       s.status
 
-    FROM Patients p
+    FROM patients p
     JOIN Studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
 
@@ -956,7 +956,7 @@ exports.getHistoricalPatients = async (page = 1, limit = 10, options = {}) => {
   const [count] = await db.query(
     `
     SELECT COUNT(*) AS total
-    FROM Patients p
+    FROM patients p
     JOIN Studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     ${baseWhere}
@@ -1078,7 +1078,7 @@ exports.getAssignedPatients = async (
       s.study_date,
       s.notes,
       s.status AS study_status
-    FROM Patients p
+    FROM patients p
     JOIN Studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
@@ -1093,7 +1093,7 @@ exports.getAssignedPatients = async (
   const [count] = await db.query(
     `
     SELECT COUNT(*) AS total
-    FROM Patients p
+    FROM patients p
     JOIN Studies s ON p.national_id = s.national_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
     ${baseWhere}
@@ -1176,7 +1176,7 @@ exports.getPatientByStudyId = async (doctor_id, study_id) => {
       s.status AS study_status,
       r.report_status
     FROM Studies s
-    JOIN Patients p ON s.national_id = p.national_id
+    JOIN patients p ON s.national_id = p.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
     WHERE s.study_id = ? AND p.doctor_id = ?
@@ -1273,7 +1273,7 @@ exports.getDeactivatedPatients = async (page = 1, limit = 10, options = {}) => {
       s.study_type,
       s.study_date,
       s.status AS study_status
-    FROM Patients p
+    FROM patients p
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Studies s ON p.national_id = s.national_id
     ${baseWhere}
@@ -1286,7 +1286,7 @@ exports.getDeactivatedPatients = async (page = 1, limit = 10, options = {}) => {
   const [count] = await db.query(
     `
     SELECT COUNT(DISTINCT p.national_id) AS total
-    FROM Patients p
+    FROM patients p
     ${baseWhere}
     `,
     countParams,
@@ -1371,7 +1371,7 @@ exports.getDoctorHistoricalPatients = async (
       CONCAT(u.first_name, ' ', u.last_name) AS doctor_name,
       s.study_id, s.study_type, s.study_date, s.status,
       r.report_status
-    FROM Patients p
+    FROM patients p
     JOIN Studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
@@ -1383,7 +1383,7 @@ exports.getDoctorHistoricalPatients = async (
 
   const [count] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Patients p
+     FROM patients p
      JOIN Studies s ON p.national_id = s.national_id
      LEFT JOIN users u ON p.doctor_id = u.user_id
      LEFT JOIN Reports r ON r.study_id = s.study_id
@@ -1416,7 +1416,7 @@ exports.getRecentPatients = async (doctor_id, page = 1, limit = 20) => {
       CONCAT(u.first_name, ' ', u.last_name) AS doctor_name,
       s.study_id, s.study_type, s.study_date, s.status,
       r.report_status
-    FROM Patients p
+    FROM patients p
     JOIN Studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
@@ -1428,7 +1428,7 @@ exports.getRecentPatients = async (doctor_id, page = 1, limit = 20) => {
 
   const [count] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Patients p
+     FROM patients p
      JOIN Studies s ON p.national_id = s.national_id
      WHERE p.doctor_id = ? AND p.is_active = 1`,
     [doctor_id],

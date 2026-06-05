@@ -14,7 +14,7 @@ exports.createReminder = async (
   if (!reason) throw { status: 400, message: "reason is required" };
 
   const [patient] = await db.query(
-    `SELECT national_id FROM Patients WHERE national_id = ? AND is_active = 1`,
+    `SELECT national_id FROM patients WHERE national_id = ? AND is_active = 1`,
     [national_id],
   );
   if (!patient.length) throw { status: 404, message: "Patient not found" };
@@ -67,7 +67,7 @@ exports.getMyReminders = async (doctor_id, filter = "all") => {
        p.last_name,
        DATEDIFF(f.due_date, NOW()) AS days_remaining
      FROM FollowUpReminders f
-     JOIN Patients p ON f.national_id = p.national_id
+     JOIN patients p ON f.national_id = p.national_id
      ${where}
      ORDER BY f.due_date ASC`,
     params,

@@ -153,7 +153,7 @@ async function getQueue(filters = {}) {
     `SELECT COUNT(*) AS total
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
-     JOIN Patients p ON a.national_id = p.national_id
+     JOIN patients p ON a.national_id = p.national_id
      WHERE ${where}`,
     params,
   );
@@ -180,7 +180,7 @@ async function getQueue(filters = {}) {
        TIMESTAMPDIFF(MINUTE, COALESCE(a.check_in_at, q.created_at), NOW()) AS waiting_minutes
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
-     JOIN Patients p ON a.national_id = p.national_id
+     JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE ${where}
      ORDER BY q.queue_position ASC
@@ -233,7 +233,7 @@ async function getArrivalBoard(filters = {}) {
        TIMESTAMPDIFF(MINUTE, COALESCE(a.check_in_at, q.created_at), NOW()) AS waiting_minutes
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
-     JOIN Patients p ON a.national_id = p.national_id
+     JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE ${where}
      ORDER BY q.queue_position ASC`,

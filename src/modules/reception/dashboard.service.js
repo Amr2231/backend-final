@@ -27,7 +27,7 @@ exports.getDashboard = async () => {
        CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
-     JOIN Patients p ON a.national_id = p.national_id
+     JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE a.appointment_date = CURDATE() AND q.board_status NOT IN ('Completed')
      ORDER BY q.queue_position ASC
@@ -42,7 +42,7 @@ exports.getDashboard = async () => {
        CONCAT(p.first_name, ' ', p.last_name) AS patient_name,
        CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
      FROM Appointments a
-     JOIN Patients p ON a.national_id = p.national_id
+     JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE a.appointment_date = CURDATE()
        AND a.status IN ('Scheduled', 'Checked In', 'Waiting')
@@ -141,7 +141,7 @@ exports.getPriorityOverview = async () => {
        CONCAT(p.first_name, ' ', p.last_name) AS patient_name
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
-     JOIN Patients p ON a.national_id = p.national_id
+     JOIN patients p ON a.national_id = p.national_id
      WHERE a.appointment_date = CURDATE() AND q.board_status NOT IN ('Completed')
      ORDER BY q.queue_position ASC`,
   );

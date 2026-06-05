@@ -40,7 +40,7 @@ exports.getDashboard = async () => {
        COUNT(*)              AS total_patients,
        SUM(is_active = 1)   AS active_patients,
        SUM(is_active = 0)   AS deactivated_patients
-     FROM Patients`,
+     FROM patients`,
   );
 
   // New patients today (Patients has no created_at — use first study date)
@@ -97,7 +97,7 @@ exports.getDashboard = async () => {
     `SELECT
        COUNT(*)             AS total,
        SUM(is_read = 0)    AS unread
-     FROM Notifications`,
+     FROM notifications`,
   );
 
   // ── AUDIT ──
@@ -160,7 +160,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
   const [todayPatients] = await db.query(
     `SELECT COUNT(*) AS total
      FROM Studies s
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ? AND DATE(s.study_date) = ?`,
     [doctor_id, today],
   );
@@ -169,7 +169,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
   const [avgTime] = await db.query(
     `SELECT ROUND(AVG(GREATEST(0, TIMESTAMPDIFF(MINUTE, s.study_date, r.signed_at)))) AS avg_minutes
      FROM Studies s
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      JOIN Reports r  ON r.study_id = s.study_id
      WHERE p.doctor_id = ?
        AND r.report_status = 'Signed'
@@ -184,7 +184,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
   const [prescriptions] = await db.query(
     `SELECT COUNT(*) AS total
      FROM Studies s
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?
        AND s.status = 'Completed'
        AND MONTH(s.study_date) = MONTH(NOW())
@@ -219,7 +219,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
        latest.study_date,
        latest.study_status,
        latest.report_status
-     FROM Patients p
+     FROM patients p
      JOIN (
        SELECT s.national_id, s.study_id, s.study_type, s.study_date,
               s.status AS study_status, r.report_status,
@@ -244,7 +244,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
        s.study_date,
        s.status
      FROM Studies s
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?
        AND DATE(s.study_date) = ?
      ORDER BY s.study_date ASC`,
@@ -263,7 +263,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
        p.last_name,
        p.national_id
      FROM FollowUpReminders f
-     JOIN Patients p ON f.national_id = p.national_id
+     JOIN patients p ON f.national_id = p.national_id
      WHERE f.doctor_id = ?
        AND f.is_done = 0
        AND f.due_date >= NOW()
@@ -282,7 +282,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
        p.first_name,
        p.last_name
      FROM Watchlist w
-     JOIN Patients p ON w.national_id = p.national_id
+     JOIN patients p ON w.national_id = p.national_id
      WHERE w.doctor_id = ?
      ORDER BY FIELD(w.priority,'critical','monitor','stable')
      LIMIT 5`,
@@ -296,7 +296,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
        SUM(IF(av.status='Approved',1,0)) AS approved
      FROM AI_Validation av
      JOIN Studies s ON av.study_id = s.study_id
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?`,
     [doctor_id],
   );
@@ -330,7 +330,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
   const [completed] = await db.query(
     `SELECT COUNT(*) AS total
      FROM Studies s
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ? AND s.status = 'Completed'
        AND s.study_date >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
     [doctor_id, days],
@@ -340,7 +340,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
   const [totalStudies] = await db.query(
     `SELECT COUNT(*) AS total
      FROM Studies s
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?
        AND s.study_date >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
     [doctor_id, days],
@@ -356,7 +356,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
     `SELECT COUNT(*) AS total
      FROM Reports r
      JOIN Studies s ON r.study_id = s.study_id
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?
        AND r.report_status = 'Signed'
        AND TIMESTAMPDIFF(HOUR, s.study_date, r.signed_at) <= 24
@@ -368,7 +368,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
     `SELECT COUNT(*) AS total
      FROM Reports r
      JOIN Studies s ON r.study_id = s.study_id
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?
        AND r.report_status = 'Signed'
        AND s.study_date >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
@@ -401,7 +401,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
        MONTH(s.study_date) AS mo,
        COUNT(*) AS count
      FROM Studies s
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?
        AND s.study_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
      GROUP BY yr, mo
@@ -419,7 +419,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
        SUM(ejection_fraction >= 40 AND ejection_fraction < 55) AS borderline
      FROM AI_Results ar
      JOIN Studies s ON ar.study_id = s.study_id
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?`,
     [doctor_id],
   );

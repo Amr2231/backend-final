@@ -336,7 +336,7 @@ exports.deleteImage = async (study_id, image_id, doctor_id) => {
     `SELECT i.image_id, i.file_path
      FROM Images i
      JOIN Studies s ON i.study_id = s.study_id
-     JOIN Patients p ON s.national_id = p.national_id
+     JOIN patients p ON s.national_id = p.national_id
      WHERE i.image_id = ?
        AND i.study_id = ?
        AND p.doctor_id = ?`,

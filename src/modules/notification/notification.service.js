@@ -15,7 +15,7 @@ exports.createNotification = async ({
 }) => {
   try {
     await db.query(
-      `INSERT INTO Notifications
+      `INSERT INTO notifications
         (user_id, type, title, message, study_id, patient_id)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [user_id, type, title, message, study_id, patient_id],
@@ -44,7 +44,7 @@ exports.getUserNotifications = async (user_id, page = 1, limit = 20) => {
 
   const [rows] = await db.query(
     `SELECT *
-     FROM Notifications
+     FROM notifications
      WHERE user_id = ?
      ORDER BY created_at DESC
      LIMIT ? OFFSET ?`,
@@ -52,12 +52,12 @@ exports.getUserNotifications = async (user_id, page = 1, limit = 20) => {
   );
 
   const [countRows] = await db.query(
-    `SELECT COUNT(*) AS total FROM Notifications WHERE user_id = ?`,
+    `SELECT COUNT(*) AS total FROM notifications WHERE user_id = ?`,
     [user_id],
   );
 
   const [unreadRows] = await db.query(
-    `SELECT COUNT(*) AS unread FROM Notifications WHERE user_id = ? AND is_read = 0`,
+    `SELECT COUNT(*) AS unread FROM notifications WHERE user_id = ? AND is_read = 0`,
     [user_id],
   );
 
@@ -76,7 +76,7 @@ exports.getUserNotifications = async (user_id, page = 1, limit = 20) => {
 // ==========================================
 exports.markAsRead = async (notification_id, user_id) => {
   const [rows] = await db.query(
-    `SELECT notification_id FROM Notifications
+    `SELECT notification_id FROM notifications
      WHERE notification_id = ? AND user_id = ?`,
     [notification_id, user_id],
   );
@@ -84,7 +84,7 @@ exports.markAsRead = async (notification_id, user_id) => {
   if (!rows.length) throw { status: 404, message: "Notification not found" };
 
   await db.query(
-    `UPDATE Notifications SET is_read = 1 WHERE notification_id = ?`,
+    `UPDATE notifications SET is_read = 1 WHERE notification_id = ?`,
     [notification_id],
   );
 
@@ -96,7 +96,7 @@ exports.markAsRead = async (notification_id, user_id) => {
 // ==========================================
 exports.markAllAsRead = async (user_id) => {
   await db.query(
-    `UPDATE Notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0`,
+    `UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0`,
     [user_id],
   );
 
@@ -108,14 +108,14 @@ exports.markAllAsRead = async (user_id) => {
 // ==========================================
 exports.deleteNotification = async (notification_id, user_id) => {
   const [rows] = await db.query(
-    `SELECT notification_id FROM Notifications
+    `SELECT notification_id FROM notifications
      WHERE notification_id = ? AND user_id = ?`,
     [notification_id, user_id],
   );
 
   if (!rows.length) throw { status: 404, message: "Notification not found" };
 
-  await db.query(`DELETE FROM Notifications WHERE notification_id = ?`, [
+  await db.query(`DELETE FROM notifications WHERE notification_id = ?`, [
     notification_id,
   ]);
 

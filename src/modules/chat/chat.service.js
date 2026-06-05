@@ -86,7 +86,7 @@ exports.getConversation = async (user_id, other_id, page = 1, limit = 30, patien
        CONCAT(p.first_name,' ',p.last_name) AS patient_name
      FROM InternalMessages m
      JOIN users  u ON m.sender_id = u.user_id
-     LEFT JOIN Patients p ON m.patient_id = p.national_id
+     LEFT JOIN patients p ON m.patient_id = p.national_id
      WHERE
        ((m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?))
        ${patientFilter}
@@ -158,7 +158,7 @@ exports.getPatientContextThreads = async (user_id) => {
        MAX(m.created_at) AS last_message_at,
        SUM(CASE WHEN m.receiver_id = ? AND m.is_read = 0 THEN 1 ELSE 0 END) AS unread_count
      FROM InternalMessages m
-     JOIN Patients p ON m.patient_id = p.national_id
+     JOIN patients p ON m.patient_id = p.national_id
      WHERE m.patient_id IS NOT NULL
        AND (m.sender_id = ? OR m.receiver_id = ?)
      GROUP BY m.patient_id, m.appointment_id, p.first_name, p.last_name

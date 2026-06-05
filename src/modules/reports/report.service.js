@@ -77,7 +77,7 @@ exports.openReport = async (study_id) => {
       s.study_id,
       p.doctor_id
     FROM Studies s
-    JOIN Patients p 
+    JOIN patients p 
       ON s.national_id = p.national_id
     WHERE s.study_id = ?
     `,
@@ -173,7 +173,7 @@ exports.autoSaveReport = async (study_id, content) => {
   if (!rows.length) {
     const [studyRows] = await db.query(
       `SELECT p.doctor_id FROM Studies s
-       JOIN Patients p ON s.national_id = p.national_id
+       JOIN patients p ON s.national_id = p.national_id
        WHERE s.study_id = ?`,
       [study_id],
     );
@@ -251,7 +251,7 @@ exports.insertAIFindings = async (
     SELECT 
       p.doctor_id
     FROM Studies s
-    JOIN Patients p
+    JOIN patients p
       ON s.national_id = p.national_id
     WHERE s.study_id=?
     `,
@@ -364,7 +364,7 @@ exports.getReport = async (study_id) => {
 
     FROM Reports r
     JOIN Studies s ON r.study_id = s.study_id
-    JOIN Patients p ON s.national_id = p.national_id
+    JOIN patients p ON s.national_id = p.national_id
     LEFT JOIN users u ON r.doctor_id = u.user_id
     LEFT JOIN users u2 ON r.signed_by = u2.user_id
     WHERE r.study_id=?

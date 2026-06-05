@@ -32,7 +32,7 @@ async function getDoctorFromStudy(study_id) {
   try {
     const [rows] = await db.query(
       `SELECT p.doctor_id FROM Studies s
-       JOIN Patients p ON s.national_id = p.national_id
+       JOIN patients p ON s.national_id = p.national_id
        WHERE s.study_id = ?`,
       [study_id],
     );

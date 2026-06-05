@@ -9,7 +9,7 @@ exports.addToWatchlist = async (
   priority = "monitor",
 ) => {
   const [patient] = await db.query(
-    `SELECT national_id, first_name, last_name FROM Patients WHERE national_id = ? AND is_active = 1`,
+    `SELECT national_id, first_name, last_name FROM patients WHERE national_id = ? AND is_active = 1`,
     [national_id],
   );
   if (!patient.length) throw { status: 404, message: "Patient not found" };
@@ -65,7 +65,7 @@ exports.getWatchlist = async (doctor_id) => {
        ai.has_hfref,
        ai.has_lvh
      FROM Watchlist w
-     JOIN Patients p ON w.national_id = p.national_id
+     JOIN patients p ON w.national_id = p.national_id
      LEFT JOIN Studies s ON p.national_id = s.national_id
        AND s.study_id = (
          SELECT study_id FROM Studies

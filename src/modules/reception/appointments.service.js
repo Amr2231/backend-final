@@ -40,7 +40,7 @@ const APPT_SELECT = `
 
 const APPT_JOINS = `
   FROM Appointments a
-  JOIN Patients p ON a.national_id = p.national_id
+  JOIN patients p ON a.national_id = p.national_id
   JOIN users u ON a.doctor_id = u.user_id
   LEFT JOIN QueueEntries q ON q.appointment_id = a.appointment_id
 `;
@@ -155,7 +155,7 @@ exports.createAppointment = async (data, userId) => {
   }
 
   const [patient] = await db.query(
-    `SELECT national_id FROM Patients WHERE national_id = ? AND is_active = 1`,
+    `SELECT national_id FROM patients WHERE national_id = ? AND is_active = 1`,
     [national_id],
   );
   if (!patient.length) throw { status: 404, message: "Patient not found" };

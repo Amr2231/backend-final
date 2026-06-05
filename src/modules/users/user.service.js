@@ -198,7 +198,7 @@ exports.transferPatients = async (oldDoctor, newDoctor) => {
   const [patients] = await db.query(
     `
     SELECT COUNT(*) AS total
-    FROM Patients
+    FROM patients
     WHERE doctor_id=?
     `,
     [oldDoctor],
@@ -225,7 +225,7 @@ exports.transferPatients = async (oldDoctor, newDoctor) => {
 // ================= UC-31 Validate doctor before deactivate =================
 const validateDoctorHasNoPatients = async (doctor_id) => {
   const [patients] = await db.query(
-    "SELECT COUNT(*) AS count FROM Patients WHERE doctor_id=?",
+    "SELECT COUNT(*) AS count FROM patients WHERE doctor_id=?",
     [doctor_id],
   );
 
@@ -238,7 +238,7 @@ const validateDoctorHasNoPatients = async (doctor_id) => {
 
 const assertDoctorCanBeDeleted = async (id) => {
   const [patients] = await db.query(
-    `SELECT COUNT(*) AS total FROM Patients WHERE doctor_id = ?`,
+    `SELECT COUNT(*) AS total FROM patients WHERE doctor_id = ?`,
     [id],
   );
 
@@ -270,7 +270,7 @@ const performUserDeletion = async (id) => {
       `DELETE FROM InternalMessages WHERE sender_id = ? OR receiver_id = ?`,
       [id, id],
     );
-    await conn.query(`DELETE FROM Notifications WHERE user_id = ?`, [id]);
+    await conn.query(`DELETE FROM notifications WHERE user_id = ?`, [id]);
     await conn.query(
       `UPDATE users SET refresh_token = NULL, refresh_token_expiry = NULL WHERE user_id = ?`,
       [id],
