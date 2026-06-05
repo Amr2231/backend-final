@@ -1,4 +1,4 @@
-const db = require("../../config/db").default;
+const db = require("../../config/db");
 
 // // ================= Register Patient + Create Study =================
 // exports.registerPatientWithStudy = async (data) => {

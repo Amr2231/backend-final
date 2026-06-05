@@ -1,4 +1,4 @@
-const db = require("../../config/db").default;
+const db = require("../../config/db");
 const argon2 = require("argon2");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");

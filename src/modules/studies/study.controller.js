@@ -101,7 +101,7 @@ exports.saveNotes = async (req, res) => {
   try {
     const { study_id } = req.params;
     const { notes, note_id } = req.body;
-    const db = require("../../config/db").default;
+    const db = require("../../config/db");
     const [doctorRows] = await db.query(
       `SELECT first_name, last_name FROM Users WHERE user_id = ?`,
       [req.user.id],

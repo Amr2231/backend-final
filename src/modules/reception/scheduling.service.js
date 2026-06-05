@@ -1,4 +1,4 @@
-const db = require("../../config/db").default;
+const db = require("../../config/db");
 
 function parseTime(timeStr) {
   const [h, m] = timeStr.split(":").map(Number);

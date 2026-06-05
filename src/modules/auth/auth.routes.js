@@ -19,7 +19,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post("/login", notify.onLogin, controller.login); // added by farah
+router.post("/login", controller.login); // added by farah
 router.post("/refresh-token", controller.refreshToken); //added by farah
 router.post("/logout", notify.onLogout, controller.logout); // added by farah
 // added limit for routes by farah

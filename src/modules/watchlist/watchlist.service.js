@@ -1,5 +1,5 @@
 // ================= created by farah =================
-const db = require("../../config/db").default;
+const db = require("../../config/db");
 
 // ================= ADD TO WATCHLIST =================
 exports.addToWatchlist = async (

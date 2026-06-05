@@ -1,4 +1,4 @@
-const db = require("../../config/db").default;
+const db = require("../../config/db");
 const axios = require("axios");
 const path = require("path");
 const fs = require("fs");

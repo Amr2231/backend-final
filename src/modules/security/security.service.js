@@ -1,5 +1,5 @@
 // Created by farah
-const db = require("../../config/db").default;
+const db = require("../../config/db");
 
 const MAX_ATTEMPTS = 3; // lock after 3 failed tries
 const LOCKOUT_MINS = 15; // lock for 15 minutes

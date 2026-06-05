@@ -1,4 +1,4 @@
-const db = require("../../config/db").default;
+const db = require("../../config/db");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
