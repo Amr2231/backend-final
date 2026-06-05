@@ -9,7 +9,7 @@ const verifyToken = require("../../middleware/auth.middleware");
 // Login rate limiter added by farah
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 3,
+  max: 100,
   skipSuccessfulRequests: true,
   message: {
     success: false,
