@@ -19,7 +19,7 @@ const chatRoutes = require("./modules/chat/chat.routes");
 const receptionRoutes = require("./modules/reception/reception.routes");
 // End of added routes
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 // ================= CORS =================
 app.use(

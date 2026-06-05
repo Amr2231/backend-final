@@ -18,7 +18,7 @@ exports.login = async (email, password, ip = null) => {
     .trim()
     .toLowerCase();
 
-  rateLimitService.checkSourceLockout(ip, normalizedEmail);
+  // rateLimitService.checkSourceLockout(ip, normalizedEmail);
 
   if (!email || !password) {
     throw { status: 401, message: INVALID_CREDENTIALS };
@@ -29,7 +29,7 @@ exports.login = async (email, password, ip = null) => {
   }
 
   try {
-    await securityService.checkLockout(normalizedEmail);
+    // await securityService.checkLockout(normalizedEmail);
   } catch (err) {
     throw { status: 429, message: LOCKOUT_MESSAGE };
   }

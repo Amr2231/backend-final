@@ -11,6 +11,9 @@ function normalizeIp(ip) {
 
 function getClientIp(req) {
   const forwarded = req.headers["x-forwarded-for"];
+  console.log("x-forwarded-for =", req.headers["x-forwarded-for"]);
+  console.log("req.ip =", req.ip);
+  console.log("client ip =", getClientIp(req));
   if (typeof forwarded === "string" && forwarded.length > 0) {
     return normalizeIp(forwarded.split(",")[0].trim());
   }
