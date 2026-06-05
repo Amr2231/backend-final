@@ -26,7 +26,7 @@ exports.getAllDoctorsAvailability = async () => {
          ORDER BY a.appointment_date, a.appointment_time
          LIMIT 1
        ) AS next_available_slot
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
      LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
      WHERE u.is_active = 1
@@ -45,7 +45,7 @@ exports.getDoctorAvailability = async (doctorId) => {
        da.workload_count,
        da.current_appointment_id,
        da.updated_at
-     FROM Users u
+     FROM users u
      LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
      WHERE u.user_id = ?`,
     [doctorId],
@@ -109,7 +109,7 @@ exports.updateDoctorStatus = async (doctorId, status, breakUntil, userId) => {
   const notifService = require("../notification/notification.service");
   if (status === "On Leave" || status === "Break") {
     const [receptionists] = await db.query(
-      `SELECT u.user_id FROM Users u
+      `SELECT u.user_id FROM users u
        JOIN Roles r ON u.role_id = r.role_id
        WHERE r.role_name = 'Receptionist' AND u.is_active = 1`,
     );

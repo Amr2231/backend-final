@@ -22,7 +22,7 @@ exports.getDashboard = async () => {
   // Users by role
   const [usersByRole] = await db.query(
     `SELECT r.role_name, COUNT(*) AS count
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      GROUP BY r.role_name`,
   );

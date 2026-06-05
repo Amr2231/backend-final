@@ -10,7 +10,7 @@ const LOCKOUT_MINS = 15; // lock for 15 minutes
 exports.checkLockout = async (email) => {
   const [rows] = await db.query(
     `SELECT user_id, lockout_until, failed_login_attempts
-     FROM Users WHERE email = ?`,
+     FROM users WHERE email = ?`,
     [email],
   );
 
@@ -32,7 +32,7 @@ exports.checkLockout = async (email) => {
 exports.recordFailedLogin = async (email, ip = null) => {
   const [rows] = await db.query(
     `SELECT u.user_id, u.first_name, u.last_name, u.failed_login_attempts, r.role_name
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      WHERE u.email = ?`,
     [email],
@@ -95,14 +95,14 @@ exports.clearFailedAttempts = async (user_id, ip = null) => {
 // ==========================================
 exports.unlockAccount = async (target_user_id) => {
   const [user] = await db.query(
-    `SELECT user_id, lockout_until FROM Users WHERE user_id = ?`,
+    `SELECT user_id, lockout_until FROM users WHERE user_id = ?`,
     [target_user_id],
   );
 
   if (!user.length) throw { status: 404, message: "User not found" };
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET failed_login_attempts = 0,
          lockout_until = NULL
      WHERE user_id = ?`,
@@ -119,7 +119,7 @@ exports.getSecurityOverview = async () => {
   // Locked accounts right now
   const [[locked]] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Users
+     FROM users
      WHERE lockout_until > NOW()`,
   );
 
@@ -184,7 +184,7 @@ exports.getLockedAccounts = async () => {
        u.failed_login_attempts,
        u.lockout_until,
        u.last_login_ip
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      WHERE u.lockout_until > NOW()
      ORDER BY u.lockout_until DESC`,

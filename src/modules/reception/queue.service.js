@@ -181,7 +181,7 @@ async function getQueue(filters = {}) {
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
      JOIN Patients p ON a.national_id = p.national_id
-     JOIN Users u ON a.doctor_id = u.user_id
+     JOIN users u ON a.doctor_id = u.user_id
      WHERE ${where}
      ORDER BY q.queue_position ASC
      LIMIT ? OFFSET ?`,
@@ -195,7 +195,7 @@ async function getQueueHistory(appointmentId) {
   const [rows] = await db.query(
     `SELECT h.*, CONCAT(u.first_name, ' ', u.last_name) AS actor_name
      FROM QueueHistory h
-     LEFT JOIN Users u ON h.created_by = u.user_id
+     LEFT JOIN users u ON h.created_by = u.user_id
      WHERE h.appointment_id = ?
      ORDER BY h.created_at DESC
      LIMIT 50`,
@@ -234,7 +234,7 @@ async function getArrivalBoard(filters = {}) {
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
      JOIN Patients p ON a.national_id = p.national_id
-     JOIN Users u ON a.doctor_id = u.user_id
+     JOIN users u ON a.doctor_id = u.user_id
      WHERE ${where}
      ORDER BY q.queue_position ASC`,
     params,

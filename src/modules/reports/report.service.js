@@ -365,8 +365,8 @@ exports.getReport = async (study_id) => {
     FROM Reports r
     JOIN Studies s ON r.study_id = s.study_id
     JOIN Patients p ON s.national_id = p.national_id
-    LEFT JOIN Users u ON r.doctor_id = u.user_id
-    LEFT JOIN Users u2 ON r.signed_by = u2.user_id
+    LEFT JOIN users u ON r.doctor_id = u.user_id
+    LEFT JOIN users u2 ON r.signed_by = u2.user_id
     WHERE r.study_id=?
     `,
     [study_id],

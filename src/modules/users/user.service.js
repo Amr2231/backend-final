@@ -8,7 +8,7 @@ const getUserById = async (id) => {
     SELECT
       u.*,
       r.role_name
-    FROM Users u
+    FROM users u
     JOIN Roles r
       ON u.role_id = r.role_id
     WHERE u.user_id=?
@@ -60,7 +60,7 @@ exports.createUser = async ({
   }
 
   // ================= CHECK EMAIL =================
-  const [exists] = await db.query("SELECT user_id FROM Users WHERE email=?", [
+  const [exists] = await db.query("SELECT user_id FROM users WHERE email=?", [
     email,
   ]);
 
@@ -82,7 +82,7 @@ exports.createUser = async ({
 
   // ================= INSERT USER =================
   await db.query(
-    `INSERT INTO Users 
+    `INSERT INTO users 
         (first_name, last_name, username, email, password_hash, role_id)
         VALUES (?, ?, ?, ?, ?, ?)`,
     [first_name, last_name, username, email, hash, role[0].role_id],
@@ -95,7 +95,7 @@ exports.createUser = async ({
 
 // ================= UC-15 Update User =================
 exports.updateUser = async (id, data) => {
-  const [rows] = await db.query("SELECT * FROM Users WHERE user_id=?", [id]);
+  const [rows] = await db.query("SELECT * FROM users WHERE user_id=?", [id]);
 
   if (!rows.length) throw new Error("User not found");
 
@@ -107,7 +107,7 @@ exports.updateUser = async (id, data) => {
   const email = data.email ?? user.email;
 
   await db.query(
-    `UPDATE Users 
+    `UPDATE users 
          SET first_name=?, last_name=?, username=?, email=? 
          WHERE user_id=?`,
     [first_name, last_name, username, email, id],
@@ -119,7 +119,7 @@ exports.updateUser = async (id, data) => {
 exports.deactivateUser = async (id) => {
   const [user] = await db.query(
     `SELECT u.*, r.role_name
-         FROM Users u
+         FROM users u
          JOIN Roles r ON u.role_id = r.role_id
          WHERE u.user_id=?`,
     [id],
@@ -134,7 +134,7 @@ exports.deactivateUser = async (id) => {
 
   await db.query(
     `
-    UPDATE Users
+    UPDATE users
     SET is_active=0
     WHERE user_id=?
     `,
@@ -147,7 +147,7 @@ exports.deactivateUser = async (id) => {
 
 // ================= UC-29 Reactivate =================
 exports.reactivateUser = async (id) => {
-  const [user] = await db.query("SELECT * FROM Users WHERE user_id=?", [id]);
+  const [user] = await db.query("SELECT * FROM users WHERE user_id=?", [id]);
 
   if (!user.length) {
     throw {
@@ -161,7 +161,7 @@ exports.reactivateUser = async (id) => {
       message: "Target doctor is invalid or inactive",
     }; // edit farah
 
-  await db.query("UPDATE Users SET is_active=1 WHERE user_id=?", [id]);
+  await db.query("UPDATE users SET is_active=1 WHERE user_id=?", [id]);
   return {
     message: "User reactivated successfully",
   };
@@ -272,10 +272,10 @@ const performUserDeletion = async (id) => {
     );
     await conn.query(`DELETE FROM Notifications WHERE user_id = ?`, [id]);
     await conn.query(
-      `UPDATE Users SET refresh_token = NULL, refresh_token_expiry = NULL WHERE user_id = ?`,
+      `UPDATE users SET refresh_token = NULL, refresh_token_expiry = NULL WHERE user_id = ?`,
       [id],
     );
-    await conn.query(`DELETE FROM Users WHERE user_id = ?`, [id]);
+    await conn.query(`DELETE FROM users WHERE user_id = ?`, [id]);
 
     await conn.commit();
   } catch (err) {
@@ -351,7 +351,7 @@ exports.deleteOwnAccount = async (userId, password) => {
   return performUserDeletion(userId);
 };
 
-// ================= Get Users =================
+// ================= Get users =================
 exports.getUsers = async (filters) => {
   let {
     status = "all",
@@ -389,7 +389,7 @@ exports.getUsers = async (filters) => {
             u.created_at,
             u.is_active,
             r.role_name
-        FROM Users u
+        FROM users u
         JOIN Roles r
             ON u.role_id = r.role_id
         WHERE 1=1
@@ -397,7 +397,7 @@ exports.getUsers = async (filters) => {
 
   let countQuery = `
         SELECT COUNT(*) AS total
-        FROM Users u
+        FROM users u
         JOIN Roles r
             ON u.role_id = r.role_id
         WHERE 1=1
@@ -512,7 +512,7 @@ exports.updateProfile = async (authUserId, data) => {
             u.created_at,
             u.is_active,
             r.role_name
-         FROM Users u
+         FROM users u
          JOIN Roles r ON u.role_id = r.role_id
          WHERE u.user_id = ?`,
     [authUserId],
@@ -587,7 +587,7 @@ exports.updateProfile = async (authUserId, data) => {
       };
     }
     const [existsUsername] = await db.query(
-      `SELECT user_id FROM Users WHERE username = ? AND user_id != ?`,
+      `SELECT user_id FROM users WHERE username = ? AND user_id != ?`,
       [username.trim(), authUserId],
     );
 

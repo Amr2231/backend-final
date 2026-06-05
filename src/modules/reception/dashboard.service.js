@@ -28,7 +28,7 @@ exports.getDashboard = async () => {
      FROM QueueEntries q
      JOIN Appointments a ON q.appointment_id = a.appointment_id
      JOIN Patients p ON a.national_id = p.national_id
-     JOIN Users u ON a.doctor_id = u.user_id
+     JOIN users u ON a.doctor_id = u.user_id
      WHERE a.appointment_date = CURDATE() AND q.board_status NOT IN ('Completed')
      ORDER BY q.queue_position ASC
      LIMIT 10`,
@@ -43,7 +43,7 @@ exports.getDashboard = async () => {
        CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
      FROM Appointments a
      JOIN Patients p ON a.national_id = p.national_id
-     JOIN Users u ON a.doctor_id = u.user_id
+     JOIN users u ON a.doctor_id = u.user_id
      WHERE a.appointment_date = CURDATE()
        AND a.status IN ('Scheduled', 'Checked In', 'Waiting')
        AND a.appointment_time >= CURTIME()
@@ -64,7 +64,7 @@ exports.getDashboard = async () => {
            AND a2.appointment_date >= CURDATE()
            AND a2.status = 'Scheduled'
        ) AS next_available
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
      LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
      WHERE u.is_active = 1

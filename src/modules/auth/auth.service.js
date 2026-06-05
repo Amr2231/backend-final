@@ -37,7 +37,7 @@ exports.login = async (email, password, ip = null) => {
 
   const [rows] = await db.query(
     `SELECT u.*, r.role_name
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      WHERE u.email = ?`,
     [normalizedEmail],
@@ -123,7 +123,7 @@ exports.refreshToken = async (refreshToken) => {
 
   const [userRows] = await db.query(
     `SELECT u.user_id, r.role_name
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      WHERE u.user_id = ?`,
     [user.user_id],
@@ -171,7 +171,7 @@ exports.forgotPassword = async (email) => {
   const normalizedEmail = String(email || "")
     .trim()
     .toLowerCase();
-  const [rows] = await db.query("SELECT user_id FROM Users WHERE email = ?", [
+  const [rows] = await db.query("SELECT user_id FROM users WHERE email = ?", [
     normalizedEmail,
   ]);
 

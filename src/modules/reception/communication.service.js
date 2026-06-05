@@ -58,7 +58,7 @@ exports.getTimeline = async (filters = {}) => {
        pc.*,
        CONCAT(u.first_name, ' ', u.last_name) AS created_by_name
      FROM PatientCommunications pc
-     JOIN Users u ON pc.created_by = u.user_id
+     JOIN users u ON pc.created_by = u.user_id
      WHERE ${where}
      ORDER BY pc.created_at DESC
      LIMIT ? OFFSET ?`,
@@ -70,7 +70,7 @@ exports.getTimeline = async (filters = {}) => {
        ca.*,
        CONCAT(u.first_name, ' ', u.last_name) AS contacted_by_name
      FROM ContactAttempts ca
-     JOIN Users u ON ca.contacted_by = u.user_id
+     JOIN users u ON ca.contacted_by = u.user_id
      WHERE ca.national_id = ?
      ORDER BY ca.contacted_at DESC`,
     [national_id],
@@ -154,7 +154,7 @@ exports.listCallbacks = async (filters = {}) => {
        CONCAT(u.first_name, ' ', u.last_name) AS created_by_name,
        (SELECT COUNT(*) FROM ContactAttempts ca WHERE ca.callback_id = cb.callback_id) AS attempt_count
      FROM CallbackRequests cb
-     JOIN Users u ON cb.created_by = u.user_id
+     JOIN users u ON cb.created_by = u.user_id
      WHERE ${where}
      ORDER BY
        FIELD(cb.priority, 'High', 'Normal', 'Low'),
@@ -170,7 +170,7 @@ exports.getCallback = async (callbackId) => {
   const [rows] = await db.query(
     `SELECT cb.*, CONCAT(u.first_name, ' ', u.last_name) AS created_by_name
      FROM CallbackRequests cb
-     JOIN Users u ON cb.created_by = u.user_id
+     JOIN users u ON cb.created_by = u.user_id
      WHERE cb.callback_id = ?`,
     [callbackId],
   );

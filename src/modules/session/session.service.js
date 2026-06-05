@@ -51,7 +51,7 @@ exports.getActiveSessions = async (filters = {}) => {
        u.refresh_token_expiry AS session_expires_at,
        u.last_login_at,
        u.last_login_ip
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      ${where}
      ORDER BY u.last_login_at DESC
@@ -61,7 +61,7 @@ exports.getActiveSessions = async (filters = {}) => {
 
   const [countRows] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      ${where}`,
     cParams,
@@ -85,7 +85,7 @@ exports.forceLogout = async (target_user_id, admin_id) => {
   }
 
   const [user] = await db.query(
-    `SELECT user_id, refresh_token FROM Users WHERE user_id = ?`,
+    `SELECT user_id, refresh_token FROM users WHERE user_id = ?`,
     [target_user_id],
   );
 
@@ -141,14 +141,14 @@ exports.getSessionStats = async () => {
 
   const [[expired]] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Users
+     FROM users
      WHERE refresh_token IS NOT NULL
        AND refresh_token_expiry <= NOW()`,
   );
 
   const [byRole] = await db.query(
     `SELECT r.role_name, COUNT(*) AS count
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      WHERE u.refresh_token IS NOT NULL
        AND u.refresh_token_expiry > NOW()

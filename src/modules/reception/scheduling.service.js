@@ -70,7 +70,7 @@ exports.suggestSlots = async ({
   );
 
   const [doctorName] = await db.query(
-    `SELECT CONCAT(first_name,' ',last_name) AS name FROM Users WHERE user_id = ?`,
+    `SELECT CONCAT(first_name,' ',last_name) AS name FROM users WHERE user_id = ?`,
     [doctor_id],
   );
 

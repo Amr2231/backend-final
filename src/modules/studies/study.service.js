@@ -51,7 +51,7 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
   // ================= VALIDATE DOCTOR =================
   const [doctor] = await db.query(
     `SELECT u.user_id
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      WHERE u.user_id=? 
        AND r.role_name='Doctor'
@@ -179,7 +179,7 @@ exports.completeStudy = async (study_id, doctor_id) => {
   // ================= 2. VALIDATE DOCTOR =================
   const [doctor] = await db.query(
     `SELECT u.user_id 
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      WHERE u.user_id=? 
        AND r.role_name='Doctor'

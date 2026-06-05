@@ -103,7 +103,7 @@ exports.saveNotes = async (req, res) => {
     const { notes, note_id } = req.body;
     const db = require("../../config/db");
     const [doctorRows] = await db.query(
-      `SELECT first_name, last_name FROM Users WHERE user_id = ?`,
+      `SELECT first_name, last_name FROM users WHERE user_id = ?`,
       [req.user.id],
     );
     const doctor_name = doctorRows.length

@@ -119,7 +119,7 @@ exports.getAIResults = async (filters = {}) => {
        CONCAT(u.first_name,' ',u.last_name) AS validated_by_name
      FROM AI_Results ar
      LEFT JOIN AI_Validation av ON ar.study_id = av.study_id
-     LEFT JOIN Users u ON av.validated_by = u.user_id
+     LEFT JOIN users u ON av.validated_by = u.user_id
      ${where}
      ORDER BY ar.created_at DESC
      LIMIT ? OFFSET ?`,

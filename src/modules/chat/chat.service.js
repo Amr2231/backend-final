@@ -16,7 +16,7 @@ exports.sendMessage = async (sender_id, payload) => {
     throw { status: 400, message: "message is required" };
 
   const [receiver] = await db.query(
-    `SELECT user_id FROM Users WHERE user_id = ? AND is_active = 1`,
+    `SELECT user_id FROM users WHERE user_id = ? AND is_active = 1`,
     [receiver_id],
   );
   if (!receiver.length) throw { status: 404, message: "Receiver not found" };
@@ -43,7 +43,7 @@ exports.sendMessage = async (sender_id, payload) => {
 
   const notifService = require("../notification/notification.service");
   const [sender] = await db.query(
-    `SELECT CONCAT(first_name,' ',last_name) AS name FROM Users WHERE user_id = ?`,
+    `SELECT CONCAT(first_name,' ',last_name) AS name FROM users WHERE user_id = ?`,
     [sender_id],
   );
   await notifService.createNotification({
@@ -85,7 +85,7 @@ exports.getConversation = async (user_id, other_id, page = 1, limit = 30, patien
        CONCAT(u.first_name,' ',u.last_name) AS sender_name,
        CONCAT(p.first_name,' ',p.last_name) AS patient_name
      FROM InternalMessages m
-     JOIN Users u ON m.sender_id = u.user_id
+     JOIN users  u ON m.sender_id = u.user_id
      LEFT JOIN Patients p ON m.patient_id = p.national_id
      WHERE
        ((m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?))
@@ -117,7 +117,7 @@ exports.getInbox = async (user_id) => {
        latest.appointment_id,
        unread.cnt AS unread_count,
        COALESCE(up.is_online, 0) AS is_online
-     FROM Users u
+     FROM users  u
      JOIN Roles r ON u.role_id = r.role_id
      JOIN (
        SELECT
@@ -214,7 +214,7 @@ exports.searchUsers = async (user_id, query = "", limit = 20) => {
        u.email,
        r.role_name,
        COALESCE(up.is_online, 0) AS is_online
-     FROM Users u
+     FROM users u
      JOIN Roles r ON u.role_id = r.role_id
      LEFT JOIN UserPresence up ON up.user_id = u.user_id
      ${where}
