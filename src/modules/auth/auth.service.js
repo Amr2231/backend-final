@@ -12,6 +12,7 @@ const LOCKOUT_MESSAGE = "Too many login attempts. Please try again later.";
 
 // ================= LOGIN =================
 exports.login = async (email, password, ip = null) => {
+  console.log("LOGIN SERVICE HIT");
   console.log("LOGIN ATTEMPT");
   console.log("EMAIL:", email);
   const normalizedEmail = String(email || "")
@@ -201,15 +202,27 @@ exports.forgotPassword = async (email) => {
 // ================= RESET PASSWORD =================
 exports.resetPassword = async (token, password, confirmPassword) => {
   if (!password || !confirmPassword) {
-    throw { status: 400, error: "missing_fields" , message: "All fields are required" }; // error added by farah 
+    throw {
+      status: 400,
+      error: "missing_fields",
+      message: "All fields are required",
+    }; // error added by farah
   }
 
   if (password !== confirmPassword) {
-    throw { status: 400, error: "password_mismatch" , message: "Passwords do not match" }; // error added by farah
+    throw {
+      status: 400,
+      error: "password_mismatch",
+      message: "Passwords do not match",
+    }; // error added by farah
   }
 
   if (password.length < 6) {
-    throw { status: 400, error: "weak_password" , message: "Password must be at least 6 characters" }; // error added by farah
+    throw {
+      status: 400,
+      error: "weak_password",
+      message: "Password must be at least 6 characters",
+    }; // error added by farah
   }
 
   const [rows] = await db.query(
@@ -221,7 +234,11 @@ exports.resetPassword = async (token, password, confirmPassword) => {
   );
 
   if (!rows.length) {
-    throw { status: 400, error: "invalid_token" , message: "Invalid or expired token" }; // error added by farah
+    throw {
+      status: 400,
+      error: "invalid_token",
+      message: "Invalid or expired token",
+    }; // error added by farah
   }
 
   const hashedPassword = await argon2.hash(password, {
@@ -330,7 +347,7 @@ exports.changePassword = async (
   );
 
   return {
-    success: true,  // success field added by farah
+    success: true, // success field added by farah
     message: "Password updated successfully.",
   };
 };

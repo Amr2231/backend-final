@@ -3,6 +3,7 @@ const { getClientIp } = require("../../utils/ip");
 
 // LOGIN
 exports.login = async (req, res, next) => {
+  console.log("LOGIN CONTROLLER HIT");
   try {
     const data = await service.login(
       req.body.email,
