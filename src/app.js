@@ -19,6 +19,7 @@ const chatRoutes = require("./modules/chat/chat.routes");
 const receptionRoutes = require("./modules/reception/reception.routes");
 // End of added routes
 const app = express();
+app.set("trust proxy", 1);
 
 // ================= CORS =================
 app.use(
@@ -28,6 +29,7 @@ app.use(
       "http://127.0.0.1:5173",
       "http://localhost:3001",
       "http://localhost:3000",
+      "https://backend-final-production-7de8.up.railway.app",
     ],
 
     credentials: true,
@@ -43,6 +45,7 @@ app.options("*", cors());
 
 // ================= BODY PARSER =================
 app.use(express.json());
+
 
 // ================= STATIC FILES =================
 // app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
