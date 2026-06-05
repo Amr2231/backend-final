@@ -16,7 +16,7 @@ exports.getDashboard = async () => {
            AND refresh_token_expiry > NOW()
            AND is_active = 1)                         AS online_now,
        SUM(lockout_until > NOW())                     AS locked_accounts
-     FROM Users`,
+     FROM users`,
   );
 
   // Users by role
@@ -30,7 +30,7 @@ exports.getDashboard = async () => {
   // New users today
   const [[newUsersToday]] = await db.query(
     `SELECT COUNT(*) AS count
-     FROM Users
+     FROM users
      WHERE DATE(created_at) = CURDATE()`,
   );
 

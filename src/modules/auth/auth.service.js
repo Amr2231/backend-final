@@ -72,7 +72,7 @@ exports.login = async (email, password, ip = null) => {
   const refreshToken = crypto.randomBytes(64).toString("hex");
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET refresh_token = ?,
          refresh_token_expiry = DATE_ADD(NOW(), INTERVAL 7 DAY)
      WHERE user_id = ?`,
@@ -106,7 +106,7 @@ exports.refreshToken = async (refreshToken) => {
 
   const [rows] = await db.query(
     `SELECT user_id, refresh_token_expiry, is_active
-     FROM Users
+     FROM users
      WHERE refresh_token = ?`,
     [refreshToken],
   );
@@ -138,7 +138,7 @@ exports.refreshToken = async (refreshToken) => {
   const newRefreshToken = crypto.randomBytes(64).toString("hex");
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET refresh_token = ?,
          refresh_token_expiry = DATE_ADD(NOW(), INTERVAL 7 DAY)
      WHERE user_id = ?`,
@@ -156,7 +156,7 @@ exports.logout = async (refreshToken) => {
   if (!refreshToken) return { message: "Logged out" };
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET refresh_token = NULL,
          refresh_token_expiry = NULL
      WHERE refresh_token = ?`,
@@ -184,7 +184,7 @@ exports.forgotPassword = async (email) => {
   const token = crypto.randomBytes(32).toString("hex");
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET password_reset_token = ?, 
          reset_token_expiry = DATE_ADD(NOW(), INTERVAL 15 MINUTE)
      WHERE email = ?`,
@@ -227,7 +227,7 @@ exports.resetPassword = async (token, password, confirmPassword) => {
 
   const [rows] = await db.query(
     `SELECT user_id
-     FROM Users
+     FROM users
      WHERE password_reset_token = ?
        AND reset_token_expiry > NOW()`,
     [token],
@@ -249,7 +249,7 @@ exports.resetPassword = async (token, password, confirmPassword) => {
   });
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET password_hash = ?, 
          password_reset_token = NULL, 
          reset_token_expiry = NULL
@@ -308,7 +308,7 @@ exports.changePassword = async (
 
   const [rows] = await db.query(
     `SELECT user_id, password_hash
-     FROM Users
+     FROM users
      WHERE user_id = ?`,
     [user_id],
   );
@@ -340,7 +340,7 @@ exports.changePassword = async (
   });
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET password_hash = ?
      WHERE user_id = ?`,
     [newHash, user_id],

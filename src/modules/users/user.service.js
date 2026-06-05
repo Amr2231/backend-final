@@ -616,7 +616,7 @@ exports.updateProfile = async (authUserId, data) => {
 
     const [exists] = await db.query(
       `SELECT user_id
-             FROM Users
+             FROM users
              WHERE email = ?
              AND user_id != ?`,
       [email.trim(), authUserId],
@@ -645,7 +645,7 @@ exports.updateProfile = async (authUserId, data) => {
 
   // ================= UPDATE [edited by farah add username] =================
   await db.query(
-    `UPDATE Users
+    `UPDATE users
          SET first_name = ?,
              last_name = ?,
              username   = ?,

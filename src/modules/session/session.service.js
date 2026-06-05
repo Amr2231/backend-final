@@ -98,7 +98,7 @@ exports.forceLogout = async (target_user_id, admin_id) => {
   }
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET refresh_token = NULL,
          refresh_token_expiry = NULL
      WHERE user_id = ?`,
@@ -113,7 +113,7 @@ exports.forceLogout = async (target_user_id, admin_id) => {
 // ==========================================
 exports.forceLogoutAll = async (admin_id) => {
   const [result] = await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET refresh_token = NULL,
          refresh_token_expiry = NULL
      WHERE refresh_token IS NOT NULL
@@ -133,7 +133,7 @@ exports.forceLogoutAll = async (admin_id) => {
 exports.getSessionStats = async () => {
   const [[active]] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Users
+     FROM users
      WHERE refresh_token IS NOT NULL
        AND refresh_token_expiry > NOW()
        AND is_active = 1`,

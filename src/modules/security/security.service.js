@@ -50,7 +50,7 @@ exports.recordFailedLogin = async (email, ip = null) => {
       : null;
 
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET failed_login_attempts = ?,
          lockout_until = ?
      WHERE user_id = ?`,
@@ -80,7 +80,7 @@ exports.recordFailedLogin = async (email, ip = null) => {
 // ==========================================
 exports.clearFailedAttempts = async (user_id, ip = null) => {
   await db.query(
-    `UPDATE Users
+    `UPDATE users
      SET failed_login_attempts = 0,
          lockout_until = NULL,
          last_login_at = NOW(),
@@ -123,10 +123,10 @@ exports.getSecurityOverview = async () => {
      WHERE lockout_until > NOW()`,
   );
 
-  // Users with failed attempts > 0
+  // users with failed attempts > 0
   const [[atRisk]] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Users
+     FROM users
      WHERE failed_login_attempts > 0
        AND (lockout_until IS NULL OR lockout_until <= NOW())`,
   );
