@@ -19,9 +19,15 @@ function getSourceKey(ip, identifier = "") {
 exports.checkSourceLockout = (ip, identifier = "") => {
   const key = getSourceKey(ip, identifier);
   const entry = attemptsBySource.get(key);
+
+  console.log("RATE LIMIT CHECK");
+  console.log("KEY =", key);
+  console.log("ENTRY =", entry);
+
   if (!entry?.lockedUntil) return;
 
   if (Date.now() < entry.lockedUntil) {
+    console.log("LOCKED!");
     throw {
       status: 429,
       message: "Too many login attempts. Please try again later.",
@@ -35,8 +41,7 @@ exports.recordFailedAttempt = (ip, identifier = "") => {
   const key = getSourceKey(ip, identifier);
   const entry = attemptsBySource.get(key) ?? { attempts: 0, lockedUntil: null };
   const attempts = entry.attempts + 1;
-  const lockedUntil =
-    attempts >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_MS : null;
+  const lockedUntil = attempts >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_MS : null;
 
   attemptsBySource.set(key, { attempts, lockedUntil });
   return { attempts, locked: attempts >= MAX_ATTEMPTS };
