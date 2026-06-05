@@ -21,7 +21,7 @@ module.exports = async (req, res, next) => {
            u.username,
            r.role_name
          FROM users u
-         JOIN Roles r ON u.role_id = r.role_id
+         JOIN roles r ON u.role_id = r.role_id
          WHERE u.user_id = ? AND u.is_active = 1`,
         [userId],
       );

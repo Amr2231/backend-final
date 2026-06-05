@@ -118,7 +118,7 @@ exports.getInbox = async (user_id) => {
        unread.cnt AS unread_count,
        COALESCE(up.is_online, 0) AS is_online
      FROM users  u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      JOIN (
        SELECT
          IF(sender_id = ?, receiver_id, sender_id) AS other_id,
@@ -215,7 +215,7 @@ exports.searchUsers = async (user_id, query = "", limit = 20) => {
        r.role_name,
        COALESCE(up.is_online, 0) AS is_online
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      LEFT JOIN UserPresence up ON up.user_id = u.user_id
      ${where}
      ORDER BY u.first_name, u.last_name

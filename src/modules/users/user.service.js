@@ -9,7 +9,7 @@ const getUserById = async (id) => {
       u.*,
       r.role_name
     FROM users u
-    JOIN Roles r
+    JOIN roles r
       ON u.role_id = r.role_id
     WHERE u.user_id=?
     `,
@@ -69,7 +69,7 @@ exports.createUser = async ({
   }
 
   // ================= CHECK ROLE =================
-  const [role] = await db.query("SELECT role_id FROM Roles WHERE role_name=?", [
+  const [role] = await db.query("SELECT role_id FROM roles WHERE role_name=?", [
     role_name,
   ]);
 
@@ -120,7 +120,7 @@ exports.deactivateUser = async (id) => {
   const [user] = await db.query(
     `SELECT u.*, r.role_name
          FROM users u
-         JOIN Roles r ON u.role_id = r.role_id
+         JOIN roles r ON u.role_id = r.role_id
          WHERE u.user_id=?`,
     [id],
   );
@@ -390,7 +390,7 @@ exports.getUsers = async (filters) => {
             u.is_active,
             r.role_name
         FROM users u
-        JOIN Roles r
+        JOIN roles r
             ON u.role_id = r.role_id
         WHERE 1=1
     `;
@@ -398,7 +398,7 @@ exports.getUsers = async (filters) => {
   let countQuery = `
         SELECT COUNT(*) AS total
         FROM users u
-        JOIN Roles r
+        JOIN roles r
             ON u.role_id = r.role_id
         WHERE 1=1
     `;
@@ -513,7 +513,7 @@ exports.updateProfile = async (authUserId, data) => {
             u.is_active,
             r.role_name
          FROM users u
-         JOIN Roles r ON u.role_id = r.role_id
+         JOIN roles r ON u.role_id = r.role_id
          WHERE u.user_id = ?`,
     [authUserId],
   );

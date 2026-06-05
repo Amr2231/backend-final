@@ -65,7 +65,7 @@ exports.getDashboard = async () => {
            AND a2.status = 'Scheduled'
        ) AS next_available
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
+     JOIN roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
      LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
      WHERE u.is_active = 1
      ORDER BY doctor_name`,

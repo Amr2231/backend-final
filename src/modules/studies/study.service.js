@@ -52,7 +52,7 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
   const [doctor] = await db.query(
     `SELECT u.user_id
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      WHERE u.user_id=? 
        AND r.role_name='Doctor'
        AND u.is_active=1`,
@@ -180,7 +180,7 @@ exports.completeStudy = async (study_id, doctor_id) => {
   const [doctor] = await db.query(
     `SELECT u.user_id 
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      WHERE u.user_id=? 
        AND r.role_name='Doctor'
        AND u.is_active=1`,

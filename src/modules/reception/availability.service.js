@@ -27,7 +27,7 @@ exports.getAllDoctorsAvailability = async () => {
          LIMIT 1
        ) AS next_available_slot
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
+     JOIN roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
      LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
      WHERE u.is_active = 1
      ORDER BY doctor_name`,
@@ -110,7 +110,7 @@ exports.updateDoctorStatus = async (doctorId, status, breakUntil, userId) => {
   if (status === "On Leave" || status === "Break") {
     const [receptionists] = await db.query(
       `SELECT u.user_id FROM users u
-       JOIN Roles r ON u.role_id = r.role_id
+       JOIN roles r ON u.role_id = r.role_id
        WHERE r.role_name = 'Receptionist' AND u.is_active = 1`,
     );
     const doc = await exports.getDoctorAvailability(doctorId);

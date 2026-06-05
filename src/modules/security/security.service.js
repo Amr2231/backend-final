@@ -33,7 +33,7 @@ exports.recordFailedLogin = async (email, ip = null) => {
   const [rows] = await db.query(
     `SELECT u.user_id, u.first_name, u.last_name, u.failed_login_attempts, r.role_name
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      WHERE u.email = ?`,
     [email],
   );
@@ -185,7 +185,7 @@ exports.getLockedAccounts = async () => {
        u.lockout_until,
        u.last_login_ip
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      WHERE u.lockout_until > NOW()
      ORDER BY u.lockout_until DESC`,
   );

@@ -149,7 +149,7 @@ exports.getLogs = async (filters = {}) => {
        COALESCE(NULLIF(TRIM(al.actor_role), ''), r.role_name) AS actor_display_role
      FROM AuditLogs al
      LEFT JOIN users u ON al.actor_id = u.user_id
-     LEFT JOIN Roles r ON u.role_id = r.role_id
+     LEFT JOIN roles r ON u.role_id = r.role_id
      ${where}
      ORDER BY al.${sort} ${order}
      LIMIT ? OFFSET ?`,

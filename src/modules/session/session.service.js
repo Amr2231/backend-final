@@ -52,7 +52,7 @@ exports.getActiveSessions = async (filters = {}) => {
        u.last_login_at,
        u.last_login_ip
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      ${where}
      ORDER BY u.last_login_at DESC
      LIMIT ? OFFSET ?`,
@@ -62,7 +62,7 @@ exports.getActiveSessions = async (filters = {}) => {
   const [countRows] = await db.query(
     `SELECT COUNT(*) AS total
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      ${where}`,
     cParams,
   );
@@ -149,7 +149,7 @@ exports.getSessionStats = async () => {
   const [byRole] = await db.query(
     `SELECT r.role_name, COUNT(*) AS count
      FROM users u
-     JOIN Roles r ON u.role_id = r.role_id
+     JOIN roles r ON u.role_id = r.role_id
      WHERE u.refresh_token IS NOT NULL
        AND u.refresh_token_expiry > NOW()
        AND u.is_active = 1
