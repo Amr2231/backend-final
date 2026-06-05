@@ -1,5 +1,5 @@
 // Created by farah
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 
 // ==========================================
 // LIVE SYSTEM DASHBOARD (Admin)

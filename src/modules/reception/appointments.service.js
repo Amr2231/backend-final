@@ -1,4 +1,4 @@
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 const {
   APPOINTMENT_STATUSES,
   VALID_STATUS_TRANSITIONS,

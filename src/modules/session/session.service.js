@@ -1,5 +1,5 @@
 // Created by farah
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 
 // ==========================================
 // GET ALL ACTIVE SESSIONS (Admin)

@@ -9,7 +9,7 @@ const verifyToken = require("../../middleware/auth.middleware");
 // Login rate limiter added by farah
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 3,
   skipSuccessfulRequests: true,
   message: {
     success: false,
@@ -19,7 +19,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post("/login", notify.onLogin, controller.login); // added by farah
+router.post("/login", loginLimiter, notify.onLogin, controller.login); // added by farah
 router.post("/refresh-token", controller.refreshToken); //added by farah
 router.post("/logout", notify.onLogout, controller.logout); // added by farah
 // added limit for routes by farah

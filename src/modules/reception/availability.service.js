@@ -1,4 +1,4 @@
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 const realtime = require("./realtime.service");
 const { DOCTOR_STATUSES } = require("./constants");
 

@@ -1,5 +1,5 @@
 // ================= INTERNAL CHAT SERVICE (extended) =================
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 const realtime = require("../reception/realtime.service");
 
 exports.sendMessage = async (sender_id, payload) => {

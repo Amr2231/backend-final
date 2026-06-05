@@ -1,4 +1,4 @@
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 const argon2 = require("argon2");
 
 // ================= Helper: Get User By ID [created by farah] =================

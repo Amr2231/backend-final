@@ -3,7 +3,7 @@ const notifService = require("../modules/notification/notification.service");
 const auditService = require("../modules/audit/audit.service");
 const { getClientIp } = require("../utils/ip");
 
-const db = require("../config/db");
+const db = require("../config/db").default;
 
 // ==========================================
 // HELPER — get actor info from req.user

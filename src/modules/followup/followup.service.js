@@ -1,5 +1,5 @@
 // ================= created by farah =================
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 
 // ================= CREATE REMINDER =================
 exports.createReminder = async (

@@ -1,5 +1,5 @@
 const service = require("./ai.service");
-const db = require("../../config/db"); // added by farah
+const db = require("../../config/db").default; // added by farah
 const { getDiagnosis } = require("./ai.service");
 // ================= RUN AI =================
 exports.runAI = async (req, res) => {

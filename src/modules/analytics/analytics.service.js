@@ -1,5 +1,5 @@
 // Created by farah
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 
 exports.getAccessHeatmap = async (filters = {}) => {
   const { from_date, to_date, actor_id } = filters;

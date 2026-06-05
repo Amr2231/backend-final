@@ -1,4 +1,4 @@
-const db = require("../../config/db");
+const db = require("../../config/db").default;
 const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
