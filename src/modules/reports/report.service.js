@@ -222,7 +222,7 @@ exports.insertAIFindings = async (
   doctorInterpretation = "",
 ) => {
   // ================= AI RESULTS =================
-  const [aiRows] = await db.query(`SELECT * FROM ai_Results WHERE study_id=?`, [
+  const [aiRows] = await db.query(`SELECT * FROM ai_results WHERE study_id=?`, [
     study_id,
   ]);
 
