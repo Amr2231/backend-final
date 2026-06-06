@@ -98,7 +98,7 @@ const db = require("../../config/db");
 
 //     // ===== INSERT STUDY =====
 //     const [studyResult] = await conn.query(
-//       `INSERT INTO Studies
+//       `INSERT INTO studies
 //        (
 //          national_id,
 //          study_type,
@@ -234,7 +234,7 @@ exports.registerPatientWithStudy = async (data) => {
 
     // ===== INSERT STUDY =====
     const [studyResult] = await conn.query(
-      `INSERT INTO Studies
+      `INSERT INTO studies
        (
          national_id,
          study_type,
@@ -357,7 +357,7 @@ exports.updatePatient = async (national_id, data) => {
       );
 
       await connection.query(
-        `UPDATE Studies
+        `UPDATE studies
          SET national_id=?
          WHERE national_id=?`,
         [new_national_id, national_id],
@@ -412,7 +412,7 @@ exports.updatePatient = async (national_id, data) => {
     if (study_type || study_date) {
       const [latestStudy] = await connection.query(
         `SELECT study_id
-         FROM Studies
+         FROM studies
          WHERE national_id = ?
          ORDER BY study_date DESC
          LIMIT 1`,
@@ -436,7 +436,7 @@ exports.updatePatient = async (national_id, data) => {
         studyValues.push(latestStudy[0].study_id);
 
         await connection.query(
-          `UPDATE Studies
+          `UPDATE studies
            SET ${studyFields.join(", ")}
            WHERE study_id = ?`,
           studyValues,
@@ -480,7 +480,7 @@ exports.deletePatient = async (national_id) => {
 
   const [studies] = await db.query(
     `SELECT status
-     FROM Studies
+     FROM studies
      WHERE national_id = ?
      ORDER BY study_date DESC, study_id DESC
      LIMIT 1`,
@@ -560,7 +560,7 @@ exports.queryPatients = async (options) => {
     LEFT JOIN users u
       ON p.doctor_id = u.user_id
 
-    LEFT JOIN Studies s
+    LEFT JOIN studies s
       ON p.national_id = s.national_id
 
     WHERE 1=1
@@ -574,7 +574,7 @@ exports.queryPatients = async (options) => {
     LEFT JOIN users u
       ON p.doctor_id = u.user_id
 
-    LEFT JOIN Studies s
+    LEFT JOIN studies s
       ON p.national_id = s.national_id
 
     WHERE 1=1
@@ -690,7 +690,7 @@ exports.reassignDoctor = async (
   // ===== CHECK ACTIVE STUDY =====
   const [activeStudy] = await db.query(
     `SELECT study_id 
-     FROM Studies 
+     FROM studies 
      WHERE national_id = ? 
        AND status != 'Completed'
      LIMIT 1`,
@@ -732,7 +732,7 @@ exports.reassignDoctor = async (
     );
 
     const [studyResult] = await conn.query(
-      `INSERT INTO Studies (national_id, study_type, study_date, status)
+      `INSERT INTO studies (national_id, study_type, study_date, status)
        VALUES (?, ?, ?, 'Scheduled')`,
       [national_id, study_type, study_date],
     );
@@ -840,7 +840,7 @@ SELECT
 
   FROM patients p
 
-  JOIN Studies s
+  JOIN studies s
     ON p.national_id = s.national_id
 
   LEFT JOIN users u
@@ -862,7 +862,7 @@ SELECT
 
     FROM patients p
 
-    JOIN Studies s
+    JOIN studies s
       ON p.national_id = s.national_id
 
     LEFT JOIN users u
@@ -942,7 +942,7 @@ exports.getHistoricalPatients = async (page = 1, limit = 10, options = {}) => {
       s.status
 
     FROM patients p
-    JOIN Studies s ON p.national_id = s.national_id
+    JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
 
     ${baseWhere}
@@ -957,7 +957,7 @@ exports.getHistoricalPatients = async (page = 1, limit = 10, options = {}) => {
     `
     SELECT COUNT(*) AS total
     FROM patients p
-    JOIN Studies s ON p.national_id = s.national_id
+    JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     ${baseWhere}
     `,
@@ -1079,7 +1079,7 @@ exports.getAssignedPatients = async (
       s.notes,
       s.status AS study_status
     FROM patients p
-    JOIN Studies s ON p.national_id = s.national_id
+    JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
     ${baseWhere}
@@ -1094,7 +1094,7 @@ exports.getAssignedPatients = async (
     `
     SELECT COUNT(*) AS total
     FROM patients p
-    JOIN Studies s ON p.national_id = s.national_id
+    JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
     ${baseWhere}
     `,
@@ -1175,7 +1175,7 @@ exports.getPatientByStudyId = async (doctor_id, study_id) => {
       s.notes,
       s.status AS study_status,
       r.report_status
-    FROM Studies s
+    FROM studies s
     JOIN patients p ON s.national_id = p.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
@@ -1275,7 +1275,7 @@ exports.getDeactivatedPatients = async (page = 1, limit = 10, options = {}) => {
       s.status AS study_status
     FROM patients p
     LEFT JOIN users u ON p.doctor_id = u.user_id
-    LEFT JOIN Studies s ON p.national_id = s.national_id
+    LEFT JOIN studies s ON p.national_id = s.national_id
     ${baseWhere}
     ORDER BY s.study_date ${orderDir}
     LIMIT ? OFFSET ?
@@ -1372,7 +1372,7 @@ exports.getDoctorHistoricalPatients = async (
       s.study_id, s.study_type, s.study_date, s.status,
       r.report_status
     FROM patients p
-    JOIN Studies s ON p.national_id = s.national_id
+    JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
     ${baseWhere}
@@ -1384,7 +1384,7 @@ exports.getDoctorHistoricalPatients = async (
   const [count] = await db.query(
     `SELECT COUNT(*) AS total
      FROM patients p
-     JOIN Studies s ON p.national_id = s.national_id
+     JOIN studies s ON p.national_id = s.national_id
      LEFT JOIN users u ON p.doctor_id = u.user_id
      LEFT JOIN Reports r ON r.study_id = s.study_id
      ${baseWhere}`,
@@ -1417,7 +1417,7 @@ exports.getRecentPatients = async (doctor_id, page = 1, limit = 20) => {
       s.study_id, s.study_type, s.study_date, s.status,
       r.report_status
     FROM patients p
-    JOIN Studies s ON p.national_id = s.national_id
+    JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
     LEFT JOIN Reports r ON r.study_id = s.study_id
     WHERE p.doctor_id = ? AND p.is_active = 1
@@ -1429,7 +1429,7 @@ exports.getRecentPatients = async (doctor_id, page = 1, limit = 20) => {
   const [count] = await db.query(
     `SELECT COUNT(*) AS total
      FROM patients p
-     JOIN Studies s ON p.national_id = s.national_id
+     JOIN studies s ON p.national_id = s.national_id
      WHERE p.doctor_id = ? AND p.is_active = 1`,
     [doctor_id],
   );

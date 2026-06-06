@@ -40,7 +40,7 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
   }
 
   // ================= CHECK STUDY =================
-  const [study] = await db.query("SELECT 1 FROM Studies WHERE study_id=?", [
+  const [study] = await db.query("SELECT 1 FROM studies WHERE study_id=?", [
     study_id,
   ]);
 
@@ -93,7 +93,7 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
 
   // Mark study as viewed once media is uploaded
   await db.query(
-    `UPDATE Studies
+    `UPDATE studies
      SET status = 'Viewed'
      WHERE study_id = ?
        AND status IN ('Scheduled', 'Pending', 'In Progress')`,
@@ -123,7 +123,7 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
 
 //   // ================= CHECK STUDY =================
 //   const [study] = await db.query(
-//     "SELECT 1 FROM Studies WHERE study_id=?",
+//     "SELECT 1 FROM studies WHERE study_id=?",
 //     [study_id]
 //   );
 
@@ -164,7 +164,7 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
 exports.completeStudy = async (study_id, doctor_id) => {
   // ================= 1. CHECK STUDY =================
   const [study] = await db.query(
-    "SELECT status FROM Studies WHERE study_id=?",
+    "SELECT status FROM studies WHERE study_id=?",
     [study_id],
   );
 
@@ -212,7 +212,7 @@ exports.completeStudy = async (study_id, doctor_id) => {
 
   // ================= 4. COMPLETE STUDY =================
   await db.query(
-    `UPDATE Studies 
+    `UPDATE studies 
      SET status='Completed'
      WHERE study_id=?`,
     [study_id],
@@ -233,7 +233,7 @@ exports.saveStudyNotes = async (
   }
 
   const [study] = await db.query(
-    `SELECT study_id, notes FROM Studies WHERE study_id = ?`,
+    `SELECT study_id, notes FROM studies WHERE study_id = ?`,
     [study_id],
   );
 
@@ -275,7 +275,7 @@ exports.saveStudyNotes = async (
     });
   }
 
-  await db.query(`UPDATE Studies SET notes = ? WHERE study_id = ?`, [
+  await db.query(`UPDATE studies SET notes = ? WHERE study_id = ?`, [
     JSON.stringify(existing),
     study_id,
   ]);
@@ -295,7 +295,7 @@ exports.saveStudyNotes = async (
 // ================= DELETE STUDY NOTE =================
 exports.deleteStudyNote = async (study_id, note_id) => {
   const [study] = await db.query(
-    `SELECT notes FROM Studies WHERE study_id = ?`,
+    `SELECT notes FROM studies WHERE study_id = ?`,
     [study_id],
   );
 
@@ -317,7 +317,7 @@ exports.deleteStudyNote = async (study_id, note_id) => {
     throw { status: 404, message: "Note not found" };
   }
 
-  await db.query(`UPDATE Studies SET notes = ? WHERE study_id = ?`, [
+  await db.query(`UPDATE studies SET notes = ? WHERE study_id = ?`, [
     JSON.stringify(filtered),
     study_id,
   ]);
@@ -335,7 +335,7 @@ exports.deleteImage = async (study_id, image_id, doctor_id) => {
   const [image] = await db.query(
     `SELECT i.image_id, i.file_path
      FROM Images i
-     JOIN Studies s ON i.study_id = s.study_id
+     JOIN studies s ON i.study_id = s.study_id
      JOIN patients p ON s.national_id = p.national_id
      WHERE i.image_id = ?
        AND i.study_id = ?

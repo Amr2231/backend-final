@@ -66,9 +66,9 @@ exports.getWatchlist = async (doctor_id) => {
        ai.has_lvh
      FROM Watchlist w
      JOIN patients p ON w.national_id = p.national_id
-     LEFT JOIN Studies s ON p.national_id = s.national_id
+     LEFT JOIN studies s ON p.national_id = s.national_id
        AND s.study_id = (
-         SELECT study_id FROM Studies
+         SELECT study_id FROM studies
          WHERE national_id = p.national_id
          ORDER BY study_date DESC LIMIT 1
        )

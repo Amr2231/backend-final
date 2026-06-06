@@ -31,7 +31,7 @@ function getIP(req) {
 async function getDoctorFromStudy(study_id) {
   try {
     const [rows] = await db.query(
-      `SELECT p.doctor_id FROM Studies s
+      `SELECT p.doctor_id FROM studies s
        JOIN patients p ON s.national_id = p.national_id
        WHERE s.study_id = ?`,
       [study_id],

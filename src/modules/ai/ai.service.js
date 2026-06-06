@@ -79,7 +79,7 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
 
     //
     const [studyRows] = await db.query(
-      "SELECT * FROM Studies WHERE study_id = ?",
+      "SELECT * FROM studies WHERE study_id = ?",
       [study_id],
     );
 

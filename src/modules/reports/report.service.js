@@ -76,7 +76,7 @@ exports.openReport = async (study_id) => {
     SELECT 
       s.study_id,
       p.doctor_id
-    FROM Studies s
+    FROM studies s
     JOIN patients p 
       ON s.national_id = p.national_id
     WHERE s.study_id = ?
@@ -142,7 +142,7 @@ exports.openReport = async (study_id) => {
       [study_id, assignedDoctorId],
     );
     // UPDATE STUDY [created by farah]
-    await db.query(`UPDATE Studies SET status='In Progress' WHERE study_id=?`, [
+    await db.query(`UPDATE studies SET status='In Progress' WHERE study_id=?`, [
       study_id,
     ]);
   }
@@ -172,7 +172,7 @@ exports.autoSaveReport = async (study_id, content) => {
 
   if (!rows.length) {
     const [studyRows] = await db.query(
-      `SELECT p.doctor_id FROM Studies s
+      `SELECT p.doctor_id FROM studies s
        JOIN patients p ON s.national_id = p.national_id
        WHERE s.study_id = ?`,
       [study_id],
@@ -187,7 +187,7 @@ exports.autoSaveReport = async (study_id, content) => {
     );
 
     // ================= UPDATE STUDY STATUS [created by farah] =================
-    await db.query(`UPDATE Studies SET status='In Progress' WHERE study_id=?`, [
+    await db.query(`UPDATE studies SET status='In Progress' WHERE study_id=?`, [
       study_id,
     ]);
     return { message: "Report created and saved" };
@@ -203,7 +203,7 @@ exports.autoSaveReport = async (study_id, content) => {
   ]);
 
   // ================= UPDATE STUDY STATUS [created by farah] =================
-  await db.query(`UPDATE Studies SET status='In Progress' WHERE study_id=?`, [
+  await db.query(`UPDATE studies SET status='In Progress' WHERE study_id=?`, [
     study_id,
   ]);
 
@@ -250,7 +250,7 @@ exports.insertAIFindings = async (
     `
     SELECT 
       p.doctor_id
-    FROM Studies s
+    FROM studies s
     JOIN patients p
       ON s.national_id = p.national_id
     WHERE s.study_id=?
@@ -337,7 +337,7 @@ exports.finalizeReport = async (study_id, doctor_id) => {
 
   // ================= AUTO COMPLETE STUDY =================
   await db.query(
-    `UPDATE Studies
+    `UPDATE studies
      SET status='Completed'
      WHERE study_id=?`,
     [study_id],
@@ -363,7 +363,7 @@ exports.getReport = async (study_id) => {
       CONCAT(u2.first_name,' ',u2.last_name) AS signing_doctor
 
     FROM Reports r
-    JOIN Studies s ON r.study_id = s.study_id
+    JOIN studies s ON r.study_id = s.study_id
     JOIN patients p ON s.national_id = p.national_id
     LEFT JOIN users u ON r.doctor_id = u.user_id
     LEFT JOIN users u2 ON r.signed_by = u2.user_id
