@@ -3,7 +3,7 @@ const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
 
-// const { getDiagnosis } = require("./ai.service"); 
+// const { getDiagnosis } = require("./ai.service");
 // ==========================================
 // FILE TYPE DETECTOR
 // ==========================================
@@ -119,7 +119,8 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
     if (fileType !== "video") {
       throw {
         status: 422,
-        message: "AI analysis supports video files only. Images can be uploaded and viewed but cannot be analyzed.",
+        message:
+          "AI analysis supports video files only. Images can be uploaded and viewed but cannot be analyzed.",
       };
     }
 
@@ -146,8 +147,10 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
     // ======================================
     // 4. CALL AI SERVICE
     // ======================================
+    const AI_URL = process.env.AI_SERVICE_URL || "http://localhost:5000";
+
     const response = await axios.post(
-      "http://localhost:5000/analyze",
+      `${AI_URL}/analyze`,
       {
         file_path: filePath,
         file_type: fileType,
