@@ -15,14 +15,14 @@ exports.addToWatchlist = async (
   if (!patient.length) throw { status: 404, message: "Patient not found" };
 
   const [exists] = await db.query(
-    `SELECT id FROM Watchlist WHERE doctor_id = ? AND national_id = ?`,
+    `SELECT id FROM watchlist WHERE doctor_id = ? AND national_id = ?`,
     [doctor_id, national_id],
   );
   if (exists.length)
     throw { status: 409, message: "Patient already in watchlist" };
 
   await db.query(
-    `INSERT INTO Watchlist (doctor_id, national_id, note, priority) VALUES (?, ?, ?, ?)`,
+    `INSERT INTO watchlist (doctor_id, national_id, note, priority) VALUES (?, ?, ?, ?)`,
     [doctor_id, national_id, note, priority],
   );
 
@@ -32,13 +32,13 @@ exports.addToWatchlist = async (
 // ================= REMOVE FROM WATCHLIST =================
 exports.removeFromWatchlist = async (doctor_id, national_id) => {
   const [row] = await db.query(
-    `SELECT id FROM Watchlist WHERE doctor_id = ? AND national_id = ?`,
+    `SELECT id FROM watchlist WHERE doctor_id = ? AND national_id = ?`,
     [doctor_id, national_id],
   );
   if (!row.length) throw { status: 404, message: "Not found in watchlist" };
 
   await db.query(
-    `DELETE FROM Watchlist WHERE doctor_id = ? AND national_id = ?`,
+    `DELETE FROM watchlist WHERE doctor_id = ? AND national_id = ?`,
     [doctor_id, national_id],
   );
 
@@ -64,7 +64,7 @@ exports.getWatchlist = async (doctor_id) => {
        ai.ejection_fraction,
        ai.has_hfref,
        ai.has_lvh
-     FROM Watchlist w
+     FROM watchlist w
      JOIN patients p ON w.national_id = p.national_id
      LEFT JOIN studies s ON p.national_id = s.national_id
        AND s.study_id = (
@@ -111,13 +111,13 @@ exports.updateWatchlistItem = async (
   priority,
 ) => {
   const [row] = await db.query(
-    `SELECT id FROM Watchlist WHERE doctor_id = ? AND national_id = ?`,
+    `SELECT id FROM watchlist WHERE doctor_id = ? AND national_id = ?`,
     [doctor_id, national_id],
   );
   if (!row.length) throw { status: 404, message: "Not found in watchlist" };
 
   await db.query(
-    `UPDATE Watchlist SET note = ?, priority = ? WHERE doctor_id = ? AND national_id = ?`,
+    `UPDATE watchlist SET note = ?, priority = ? WHERE doctor_id = ? AND national_id = ?`,
     [note, priority, doctor_id, national_id],
   );
 

@@ -257,7 +257,7 @@ const performUserDeletion = async (id) => {
     await conn.beginTransaction();
 
     await conn.query(`DELETE FROM followupreminders WHERE doctor_id = ?`, [id]);
-    await conn.query(`DELETE FROM Watchlist WHERE doctor_id = ?`, [id]);
+    await conn.query(`DELETE FROM watchlist WHERE doctor_id = ?`, [id]);
     await conn.query(`DELETE FROM doctoravailability WHERE doctor_id = ?`, [id]);
     await conn.query(`DELETE FROM doctorschedules WHERE doctor_id = ?`, [id]);
     await conn.query(`DELETE FROM doctorholidays WHERE doctor_id = ?`, [id]);

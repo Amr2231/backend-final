@@ -281,7 +281,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
        w.priority,
        p.first_name,
        p.last_name
-     FROM Watchlist w
+     FROM watchlist w
      JOIN patients p ON w.national_id = p.national_id
      WHERE w.doctor_id = ?
      ORDER BY FIELD(w.priority,'critical','monitor','stable')
