@@ -15,7 +15,7 @@ exports.getSchedule = async (doctorId) => {
     `SELECT schedule_id, day_of_week, start_time, end_time,
             break_start, break_end, slot_duration_minutes,
             max_appointments, is_active
-     FROM DoctorSchedules
+     FROM doctorschedules
      WHERE doctor_id = ?
      ORDER BY day_of_week`,
     [doctorId],
@@ -23,7 +23,7 @@ exports.getSchedule = async (doctorId) => {
 
   const [holidays] = await db.query(
     `SELECT holiday_id, holiday_date, reason
-     FROM DoctorHolidays
+     FROM doctorholidays
      WHERE doctor_id = ? AND holiday_date >= CURDATE()
      ORDER BY holiday_date ASC`,
     [doctorId],
@@ -56,7 +56,7 @@ exports.saveSchedule = async (doctorId, days = []) => {
     }
 
     await db.query(
-      `INSERT INTO DoctorSchedules
+      `INSERT INTO doctorschedules
          (doctor_id, day_of_week, start_time, end_time, break_start, break_end,
           slot_duration_minutes, max_appointments, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -90,7 +90,7 @@ exports.addHoliday = async (doctorId, holiday_date, reason = null) => {
   if (!holiday_date) throw { status: 400, message: "holiday_date is required" };
 
   await db.query(
-    `INSERT INTO DoctorHolidays (doctor_id, holiday_date, reason)
+    `INSERT INTO doctorholidays (doctor_id, holiday_date, reason)
      VALUES (?, ?, ?)
      ON DUPLICATE KEY UPDATE reason = VALUES(reason)`,
     [doctorId, holiday_date, reason],
@@ -101,7 +101,7 @@ exports.addHoliday = async (doctorId, holiday_date, reason = null) => {
 
 exports.removeHoliday = async (doctorId, holidayId) => {
   await db.query(
-    `DELETE FROM DoctorHolidays WHERE holiday_id = ? AND doctor_id = ?`,
+    `DELETE FROM doctorholidays WHERE holiday_id = ? AND doctor_id = ?`,
     [holidayId, doctorId],
   );
   return { message: "Holiday removed" };

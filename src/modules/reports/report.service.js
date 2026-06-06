@@ -234,7 +234,7 @@ exports.insertAIFindings = async (
 
   // ================= AI VALIDATION =================
   const [valRows] = await db.query(
-    `SELECT * FROM AI_Validation WHERE study_id=?`,
+    `SELECT * FROM ai_validation WHERE study_id=?`,
     [study_id],
   );
 

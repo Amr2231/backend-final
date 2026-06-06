@@ -34,7 +34,7 @@ exports.suggestSlots = async ({
   const dayOfWeek = targetDate.getDay();
 
   const [holiday] = await db.query(
-    `SELECT 1 FROM DoctorHolidays WHERE doctor_id = ? AND holiday_date = ?`,
+    `SELECT 1 FROM doctorholidays WHERE doctor_id = ? AND holiday_date = ?`,
     [doctor_id, date],
   );
   if (holiday.length) {
@@ -45,7 +45,7 @@ exports.suggestSlots = async ({
   }
 
   const [schedule] = await db.query(
-    `SELECT * FROM DoctorSchedules
+    `SELECT * FROM doctorschedules
      WHERE doctor_id = ? AND day_of_week = ? AND is_active = 1`,
     [doctor_id, dayOfWeek],
   );
@@ -63,7 +63,7 @@ exports.suggestSlots = async ({
   const breakEnd = sched.break_end ? parseTime(String(sched.break_end).slice(0, 5)) : null;
 
   const [existing] = await db.query(
-    `SELECT appointment_time, duration_minutes FROM Appointments
+    `SELECT appointment_time, duration_minutes FROM appointments
      WHERE doctor_id = ? AND appointment_date = ?
        AND status NOT IN ('Cancelled', 'No Show')`,
     [doctor_id, date],
@@ -129,7 +129,7 @@ exports.suggestSlots = async ({
 
   if (national_id) {
     const [patientAppts] = await db.query(
-      `SELECT appointment_date, appointment_time FROM Appointments
+      `SELECT appointment_date, appointment_time FROM appointments
        WHERE national_id = ? AND appointment_date = ?
          AND status NOT IN ('Cancelled', 'No Show', 'Completed')`,
       [national_id, date],
@@ -174,7 +174,7 @@ exports.suggestSlots = async ({
 exports.checkConflict = async ({ doctor_id, appointment_date, appointment_time, duration_minutes = 30, exclude_id }) => {
   let sql = `
     SELECT a.*, CONCAT(p.first_name,' ',p.last_name) AS patient_name
-    FROM Appointments a
+    FROM appointments a
     JOIN patients p ON a.national_id = p.national_id
     WHERE a.doctor_id = ? AND a.appointment_date = ?
       AND a.status NOT IN ('Cancelled', 'No Show', 'Completed')`;

@@ -39,10 +39,10 @@ const APPT_SELECT = `
 `;
 
 const APPT_JOINS = `
-  FROM Appointments a
+  FROM appointments a
   JOIN patients p ON a.national_id = p.national_id
   JOIN users u ON a.doctor_id = u.user_id
-  LEFT JOIN QueueEntries q ON q.appointment_id = a.appointment_id
+  LEFT JOIN queueentries q ON q.appointment_id = a.appointment_id
 `;
 
 function buildListQuery(filters) {
@@ -169,7 +169,7 @@ exports.createAppointment = async (data, userId) => {
   if (!doctor.length) throw { status: 404, message: "Doctor not found" };
 
   const [conflicts] = await db.query(
-    `SELECT appointment_id FROM Appointments
+    `SELECT appointment_id FROM appointments
      WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ?
        AND status NOT IN ('Cancelled', 'No Show', 'Completed')`,
     [doctor_id, appointment_date, appointment_time],
@@ -207,7 +207,7 @@ exports.createAppointment = async (data, userId) => {
   }
 
   const [result] = await db.query(
-    `INSERT INTO Appointments
+    `INSERT INTO appointments
        (national_id, doctor_id, appointment_date, appointment_time, duration_minutes,
         priority_level, reason, notes, created_by)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -275,13 +275,13 @@ exports.updateStatus = async (appointmentId, newStatus, userId) => {
     await availabilityService.setDoctorStatus(appt.doctor_id, "Available", null);
   } else if (newStatus === "Cancelled" || newStatus === "No Show") {
     await db.query(
-      `UPDATE QueueEntries SET board_status = 'Completed' WHERE appointment_id = ?`,
+      `UPDATE queueentries SET board_status = 'Completed' WHERE appointment_id = ?`,
       [appointmentId],
     );
   }
 
   await db.query(
-    `UPDATE Appointments SET
+    `UPDATE appointments SET
        status = ?,
        check_in_at = COALESCE(?, check_in_at),
        consultation_started_at = COALESCE(?, consultation_started_at),
@@ -313,7 +313,7 @@ exports.updateStatus = async (appointmentId, newStatus, userId) => {
   });
 
   const [doctorRow] = await db.query(
-    `SELECT doctor_id FROM Appointments WHERE appointment_id = ?`,
+    `SELECT doctor_id FROM appointments WHERE appointment_id = ?`,
     [appointmentId],
   );
   if (doctorRow[0]?.doctor_id) {
@@ -345,11 +345,11 @@ exports.updateStatus = async (appointmentId, newStatus, userId) => {
 exports.updatePriority = async (appointmentId, priorityLevel, userId) => {
   const appt = await exports.getAppointment(appointmentId);
   await db.query(
-    `UPDATE Appointments SET priority_level = ? WHERE appointment_id = ?`,
+    `UPDATE appointments SET priority_level = ? WHERE appointment_id = ?`,
     [priorityLevel, appointmentId],
   );
   await db.query(
-    `UPDATE QueueEntries SET priority_level = ? WHERE appointment_id = ?`,
+    `UPDATE queueentries SET priority_level = ? WHERE appointment_id = ?`,
     [priorityLevel, appointmentId],
   );
   await queueService.reorderQueue();

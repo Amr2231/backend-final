@@ -247,7 +247,7 @@ exports.registerPatientWithStudy = async (data) => {
 
     // ===== INSERT APPOINTMENT =====
     await conn.query(
-      `INSERT INTO Appointments
+      `INSERT INTO appointments
        (
          national_id,
          doctor_id,
@@ -1304,14 +1304,14 @@ exports.getDeactivatedPatients = async (page = 1, limit = 10, options = {}) => {
 // ================= REACTIVATE PATIENT (Admin) =================
 exports.reactivatePatient = async (national_id) => {
   const [patient] = await db.query(
-    `SELECT national_id, is_active FROM Patients WHERE national_id = ?`,
+    `SELECT national_id, is_active FROM patients WHERE national_id = ?`,
     [national_id],
   );
 
   if (!patient.length) throw new Error("Patient not found");
   if (patient[0].is_active) throw new Error("Patient is already active");
 
-  await db.query(`UPDATE Patients SET is_active = 1 WHERE national_id = ?`, [
+  await db.query(`UPDATE patients SET is_active = 1 WHERE national_id = ?`, [
     national_id,
   ]);
 

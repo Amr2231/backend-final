@@ -93,7 +93,7 @@ exports.getAIResult = async (req, res) => {
     );
 
     const [valRows] = await db.query(
-      `SELECT status FROM AI_Validation WHERE study_id = ?`,
+      `SELECT status FROM ai_validation WHERE study_id = ?`,
       [study_id],
     );
 

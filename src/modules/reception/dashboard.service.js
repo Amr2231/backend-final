@@ -12,7 +12,7 @@ exports.getDashboard = async () => {
        SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed,
        SUM(CASE WHEN status = 'No Show' THEN 1 ELSE 0 END) AS no_shows,
        SUM(CASE WHEN status = 'In Consultation' THEN 1 ELSE 0 END) AS in_consultation
-     FROM Appointments
+     FROM appointments
      WHERE appointment_date = ?`,
     [today],
   );
@@ -25,8 +25,8 @@ exports.getDashboard = async () => {
        q.estimated_wait_minutes,
        CONCAT(p.first_name, ' ', p.last_name) AS patient_name,
        CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE a.appointment_date = CURDATE() AND q.board_status NOT IN ('Completed')
@@ -41,7 +41,7 @@ exports.getDashboard = async () => {
        a.status,
        CONCAT(p.first_name, ' ', p.last_name) AS patient_name,
        CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
-     FROM Appointments a
+     FROM appointments a
      JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE a.appointment_date = CURDATE()
@@ -59,14 +59,14 @@ exports.getDashboard = async () => {
        da.workload_count,
        (
          SELECT MIN(CONCAT(a2.appointment_date, ' ', a2.appointment_time))
-         FROM Appointments a2
+         FROM appointments a2
          WHERE a2.doctor_id = u.user_id
            AND a2.appointment_date >= CURDATE()
            AND a2.status = 'Scheduled'
        ) AS next_available
      FROM users u
      JOIN roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
-     LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
+     LEFT JOIN doctoravailability da ON da.doctor_id = u.user_id
      WHERE u.is_active = 1
      ORDER BY doctor_name`,
   );
@@ -75,8 +75,8 @@ exports.getDashboard = async () => {
     `SELECT
        q.priority_level,
        COUNT(*) AS count
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      WHERE a.appointment_date = CURDATE() AND q.board_status NOT IN ('Completed')
      GROUP BY q.priority_level`,
   );
@@ -85,7 +85,7 @@ exports.getDashboard = async () => {
     `SELECT
        DATE(appointment_date) AS day,
        COUNT(*) AS total
-     FROM Appointments
+     FROM appointments
      WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
      GROUP BY DATE(appointment_date)
      ORDER BY day ASC`,
@@ -95,7 +95,7 @@ exports.getDashboard = async () => {
     `SELECT
        HOUR(check_in_at) AS hour,
        COUNT(*) AS count
-     FROM Appointments
+     FROM appointments
      WHERE appointment_date = CURDATE() AND check_in_at IS NOT NULL
      GROUP BY HOUR(check_in_at)
      ORDER BY hour ASC`,
@@ -103,7 +103,7 @@ exports.getDashboard = async () => {
 
   const [dailyOps] = await db.query(
     `SELECT status, COUNT(*) AS count
-     FROM Appointments
+     FROM appointments
      WHERE appointment_date = CURDATE()
      GROUP BY status`,
   );
@@ -139,8 +139,8 @@ exports.getPriorityOverview = async () => {
        q.priority_reason,
        q.board_status,
        CONCAT(p.first_name, ' ', p.last_name) AS patient_name
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      JOIN patients p ON a.national_id = p.national_id
      WHERE a.appointment_date = CURDATE() AND q.board_status NOT IN ('Completed')
      ORDER BY q.queue_position ASC`,

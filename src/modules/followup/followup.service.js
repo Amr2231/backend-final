@@ -23,7 +23,7 @@ exports.createReminder = async (
   due_date.setDate(due_date.getDate() + parseInt(days));
 
   const [result] = await db.query(
-    `INSERT INTO FollowUpReminders
+    `INSERT INTO followupreminders
        (doctor_id, national_id, due_date, reason, priority)
      VALUES (?, ?, ?, ?, ?)`,
     [doctor_id, national_id, due_date, reason, priority],
@@ -66,7 +66,7 @@ exports.getMyReminders = async (doctor_id, filter = "all") => {
        p.first_name,
        p.last_name,
        DATEDIFF(f.due_date, NOW()) AS days_remaining
-     FROM FollowUpReminders f
+     FROM followupreminders f
      JOIN patients p ON f.national_id = p.national_id
      ${where}
      ORDER BY f.due_date ASC`,
@@ -79,14 +79,14 @@ exports.getMyReminders = async (doctor_id, filter = "all") => {
 // ================= MARK AS DONE =================
 exports.markDone = async (doctor_id, reminder_id) => {
   const [row] = await db.query(
-    `SELECT reminder_id FROM FollowUpReminders
+    `SELECT reminder_id FROM followupreminders
      WHERE reminder_id = ? AND doctor_id = ?`,
     [reminder_id, doctor_id],
   );
   if (!row.length) throw { status: 404, message: "Reminder not found" };
 
   await db.query(
-    `UPDATE FollowUpReminders SET is_done = 1, done_at = NOW()
+    `UPDATE followupreminders SET is_done = 1, done_at = NOW()
      WHERE reminder_id = ?`,
     [reminder_id],
   );
@@ -97,13 +97,13 @@ exports.markDone = async (doctor_id, reminder_id) => {
 // ================= DELETE REMINDER =================
 exports.deleteReminder = async (doctor_id, reminder_id) => {
   const [row] = await db.query(
-    `SELECT reminder_id FROM FollowUpReminders
+    `SELECT reminder_id FROM followupreminders
      WHERE reminder_id = ? AND doctor_id = ?`,
     [reminder_id, doctor_id],
   );
   if (!row.length) throw { status: 404, message: "Reminder not found" };
 
-  await db.query(`DELETE FROM FollowUpReminders WHERE reminder_id = ?`, [
+  await db.query(`DELETE FROM followupreminders WHERE reminder_id = ?`, [
     reminder_id,
   ]);
 
@@ -119,7 +119,7 @@ exports.updateReminder = async (
   priority,
 ) => {
   const [row] = await db.query(
-    `SELECT reminder_id FROM FollowUpReminders
+    `SELECT reminder_id FROM followupreminders
      WHERE reminder_id = ? AND doctor_id = ?`,
     [reminder_id, doctor_id],
   );
@@ -129,7 +129,7 @@ exports.updateReminder = async (
   due_date.setDate(due_date.getDate() + parseInt(days));
 
   await db.query(
-    `UPDATE FollowUpReminders
+    `UPDATE followupreminders
      SET due_date = ?, reason = ?, priority = ?
      WHERE reminder_id = ?`,
     [due_date, reason, priority, reminder_id],

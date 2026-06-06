@@ -13,7 +13,7 @@ exports.getAIStats = async () => {
   // By validation status
   const [byStatus] = await db.query(
     `SELECT status, COUNT(*) AS count
-     FROM AI_Validation
+     FROM ai_validation
      GROUP BY status`,
   );
 
@@ -48,7 +48,7 @@ exports.getAIStats = async () => {
   let editedTotal = 0;
   try {
     const [[edited]] = await db.query(
-      `SELECT COUNT(DISTINCT study_id) AS total FROM AI_Edits`,
+      `SELECT COUNT(DISTINCT study_id) AS total FROM ai_edits`,
     );
     editedTotal = edited.total ?? 0;
   } catch {
@@ -118,7 +118,7 @@ exports.getAIResults = async (filters = {}) => {
        av.validated_at,
        CONCAT(u.first_name,' ',u.last_name) AS validated_by_name
      FROM ai_results ar
-     LEFT JOIN AI_Validation av ON ar.study_id = av.study_id
+     LEFT JOIN ai_validation av ON ar.study_id = av.study_id
      LEFT JOIN users u ON av.validated_by = u.user_id
      ${where}
      ORDER BY ar.created_at DESC
@@ -129,7 +129,7 @@ exports.getAIResults = async (filters = {}) => {
   const [[count]] = await db.query(
     `SELECT COUNT(*) AS total
      FROM ai_results ar
-     LEFT JOIN AI_Validation av ON ar.study_id = av.study_id
+     LEFT JOIN ai_validation av ON ar.study_id = av.study_id
      ${where}`,
     cParams,
   );

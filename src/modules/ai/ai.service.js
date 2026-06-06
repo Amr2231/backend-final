@@ -218,7 +218,7 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
     // ======================================
     await db.query(
       `
-      INSERT INTO AI_Validation (study_id, status, validated_by, validated_at)
+      INSERT INTO ai_validation (study_id, status, validated_by, validated_at)
       VALUES (?, 'Pending', NULL, NULL)
       ON DUPLICATE KEY UPDATE
         status = 'Pending',
@@ -255,7 +255,7 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
 // ================= VALIDATE AI =================
 exports.validateAI = async (study_id, doctor_id, action) => {
   const [rows] = await db.query(
-    "SELECT * FROM AI_Validation WHERE study_id=?",
+    "SELECT * FROM ai_validation WHERE study_id=?",
     [study_id],
   );
 
@@ -272,7 +272,7 @@ exports.validateAI = async (study_id, doctor_id, action) => {
     }
 
     await db.query(
-      `UPDATE AI_Validation
+      `UPDATE ai_validation
        SET status='Approved',
            validated_by=?,
            validated_at=NOW()
@@ -290,7 +290,7 @@ exports.validateAI = async (study_id, doctor_id, action) => {
     }
 
     await db.query(
-      `UPDATE AI_Validation
+      `UPDATE ai_validation
        SET status='Rejected',
            validated_by=?,
            validated_at=NOW()
@@ -324,7 +324,7 @@ exports.editAIResult = async (study_id, doctor_id, edits) => {
   // ================= CHECK VALIDATION =================
   const [validationRows] = await db.query(
     `SELECT status
-     FROM AI_Validation
+     FROM ai_validation
      WHERE study_id=?`,
     [study_id],
   );
@@ -386,7 +386,7 @@ exports.editAIResult = async (study_id, doctor_id, edits) => {
 
     // Audit log
     await db.query(
-      `INSERT INTO AI_Edits
+      `INSERT INTO ai_edits
       (
         study_id,
         field_name,
@@ -417,7 +417,7 @@ exports.editAIResult = async (study_id, doctor_id, edits) => {
 
   // ================= UPDATE VALIDATION =================
   await db.query(
-    `UPDATE AI_Validation
+    `UPDATE ai_validation
      SET status='Edited',
          validated_by=?,
          validated_at=NOW()

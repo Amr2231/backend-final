@@ -190,7 +190,7 @@ exports.transferPatients = async (oldDoctor, newDoctor) => {
   } // edit farah by check if target doctor is valid and active
 
   //   const [patients] = await db.query(
-  //     "SELECT * FROM Patients WHERE doctor_id=?",
+  //     "SELECT * FROM patients WHERE doctor_id=?",
   //     [oldDoctor],
   //   );
 
@@ -212,7 +212,7 @@ exports.transferPatients = async (oldDoctor, newDoctor) => {
   } // edit farah by add status and message
 
   // TRANSFER
-  await db.query("UPDATE Patients SET doctor_id=? WHERE doctor_id=?", [
+  await db.query("UPDATE patients SET doctor_id=? WHERE doctor_id=?", [
     newDoctor,
     oldDoctor,
   ]);
@@ -256,18 +256,18 @@ const performUserDeletion = async (id) => {
   try {
     await conn.beginTransaction();
 
-    await conn.query(`DELETE FROM FollowUpReminders WHERE doctor_id = ?`, [id]);
+    await conn.query(`DELETE FROM followupreminders WHERE doctor_id = ?`, [id]);
     await conn.query(`DELETE FROM Watchlist WHERE doctor_id = ?`, [id]);
-    await conn.query(`DELETE FROM DoctorAvailability WHERE doctor_id = ?`, [id]);
-    await conn.query(`DELETE FROM DoctorSchedules WHERE doctor_id = ?`, [id]);
-    await conn.query(`DELETE FROM DoctorHolidays WHERE doctor_id = ?`, [id]);
-    await conn.query(`DELETE FROM UserPresence WHERE user_id = ?`, [id]);
+    await conn.query(`DELETE FROM doctoravailability WHERE doctor_id = ?`, [id]);
+    await conn.query(`DELETE FROM doctorschedules WHERE doctor_id = ?`, [id]);
+    await conn.query(`DELETE FROM doctorholidays WHERE doctor_id = ?`, [id]);
+    await conn.query(`DELETE FROM userpresence WHERE user_id = ?`, [id]);
     await conn.query(
-      `UPDATE AI_Validation SET validated_by = NULL WHERE validated_by = ?`,
+      `UPDATE ai_validation SET validated_by = NULL WHERE validated_by = ?`,
       [id],
     );
     await conn.query(
-      `DELETE FROM InternalMessages WHERE sender_id = ? OR receiver_id = ?`,
+      `DELETE FROM internalmessages WHERE sender_id = ? OR receiver_id = ?`,
       [id, id],
     );
     await conn.query(`DELETE FROM notifications WHERE user_id = ?`, [id]);

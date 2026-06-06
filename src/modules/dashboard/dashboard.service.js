@@ -79,7 +79,7 @@ exports.getDashboard = async () => {
        SUM(av.status = 'Rejected')                AS rejected,
        SUM(av.status = 'Edited')                  AS edited
      FROM ai_results ar
-     LEFT JOIN AI_Validation av ON ar.study_id = av.study_id`,
+     LEFT JOIN ai_validation av ON ar.study_id = av.study_id`,
   );
 
   // ── REPORTS ──
@@ -197,7 +197,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
     `SELECT
        COUNT(*) AS total,
        SUM(is_done) AS done
-     FROM FollowUpReminders
+     FROM followupreminders
      WHERE doctor_id = ?`,
     [doctor_id],
   );
@@ -262,7 +262,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
        p.first_name,
        p.last_name,
        p.national_id
-     FROM FollowUpReminders f
+     FROM followupreminders f
      JOIN patients p ON f.national_id = p.national_id
      WHERE f.doctor_id = ?
        AND f.is_done = 0
@@ -294,7 +294,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
     `SELECT
        COUNT(*) AS total,
        SUM(IF(av.status='Approved',1,0)) AS approved
-     FROM AI_Validation av
+     FROM ai_validation av
      JOIN studies s ON av.study_id = s.study_id
      JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?`,
@@ -385,7 +385,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
     `SELECT
        COUNT(*) AS total,
        SUM(is_done) AS done
-     FROM FollowUpReminders
+     FROM followupreminders
      WHERE doctor_id = ?
        AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
     [doctor_id, days],

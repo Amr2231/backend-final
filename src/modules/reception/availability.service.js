@@ -13,13 +13,13 @@ exports.getAllDoctorsAvailability = async () => {
        da.current_appointment_id,
        da.updated_at,
        (
-         SELECT COUNT(*) FROM Appointments a
+         SELECT COUNT(*) FROM appointments a
          WHERE a.doctor_id = u.user_id AND a.appointment_date = CURDATE()
            AND a.status NOT IN ('Cancelled', 'No Show', 'Completed')
        ) AS today_appointments,
        (
          SELECT CONCAT(a.appointment_date, ' ', a.appointment_time)
-         FROM Appointments a
+         FROM appointments a
          WHERE a.doctor_id = u.user_id
            AND CONCAT(a.appointment_date, ' ', a.appointment_time) > NOW()
            AND a.status = 'Scheduled'
@@ -28,7 +28,7 @@ exports.getAllDoctorsAvailability = async () => {
        ) AS next_available_slot
      FROM users u
      JOIN roles r ON u.role_id = r.role_id AND r.role_name = 'Doctor'
-     LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
+     LEFT JOIN doctoravailability da ON da.doctor_id = u.user_id
      WHERE u.is_active = 1
      ORDER BY doctor_name`,
   );
@@ -46,7 +46,7 @@ exports.getDoctorAvailability = async (doctorId) => {
        da.current_appointment_id,
        da.updated_at
      FROM users u
-     LEFT JOIN DoctorAvailability da ON da.doctor_id = u.user_id
+     LEFT JOIN doctoravailability da ON da.doctor_id = u.user_id
      WHERE u.user_id = ?`,
     [doctorId],
   );
@@ -60,7 +60,7 @@ exports.setDoctorStatus = async (doctorId, status, appointmentId = null) => {
   }
 
   await db.query(
-    `INSERT INTO DoctorAvailability (doctor_id, status, current_appointment_id)
+    `INSERT INTO doctoravailability (doctor_id, status, current_appointment_id)
      VALUES (?, ?, ?)
      ON DUPLICATE KEY UPDATE
        status = VALUES(status),
@@ -71,7 +71,7 @@ exports.setDoctorStatus = async (doctorId, status, appointmentId = null) => {
 
   if (status === "In Consultation") {
     await db.query(
-      `UPDATE DoctorAvailability SET workload_count = workload_count + 1 WHERE doctor_id = ?`,
+      `UPDATE doctoravailability SET workload_count = workload_count + 1 WHERE doctor_id = ?`,
       [doctorId],
     );
   }
@@ -82,7 +82,7 @@ exports.setDoctorStatus = async (doctorId, status, appointmentId = null) => {
 
 exports.decrementWorkload = async (doctorId) => {
   await db.query(
-    `UPDATE DoctorAvailability
+    `UPDATE doctoravailability
      SET workload_count = GREATEST(0, workload_count - 1)
      WHERE doctor_id = ?`,
     [doctorId],
@@ -95,7 +95,7 @@ exports.updateDoctorStatus = async (doctorId, status, breakUntil, userId) => {
   }
 
   await db.query(
-    `INSERT INTO DoctorAvailability (doctor_id, status, break_until)
+    `INSERT INTO doctoravailability (doctor_id, status, break_until)
      VALUES (?, ?, ?)
      ON DUPLICATE KEY UPDATE
        status = VALUES(status),
@@ -129,7 +129,7 @@ exports.updateDoctorStatus = async (doctorId, status, breakUntil, userId) => {
 
 exports.updatePresence = async (userId, isOnline, typingToUserId = null) => {
   await db.query(
-    `INSERT INTO UserPresence (user_id, is_online, last_seen_at, typing_to_user_id)
+    `INSERT INTO userpresence (user_id, is_online, last_seen_at, typing_to_user_id)
      VALUES (?, ?, NOW(), ?)
      ON DUPLICATE KEY UPDATE
        is_online = VALUES(is_online),
@@ -144,7 +144,7 @@ exports.getPresence = async (userIds) => {
   const placeholders = userIds.map(() => "?").join(",");
   const [rows] = await db.query(
     `SELECT user_id, is_online, last_seen_at, typing_to_user_id
-     FROM UserPresence WHERE user_id IN (${placeholders})`,
+     FROM userpresence WHERE user_id IN (${placeholders})`,
     userIds,
   );
   return { data: rows };

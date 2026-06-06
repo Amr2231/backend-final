@@ -69,7 +69,7 @@ exports.getTimeline = async (filters = {}) => {
     `SELECT
        ca.*,
        CONCAT(u.first_name, ' ', u.last_name) AS contacted_by_name
-     FROM ContactAttempts ca
+     FROM contactattempts ca
      JOIN users u ON ca.contacted_by = u.user_id
      WHERE ca.national_id = ?
      ORDER BY ca.contacted_at DESC`,
@@ -92,7 +92,7 @@ exports.createCallback = async (data, userId) => {
   }
 
   const [result] = await db.query(
-    `INSERT INTO CallbackRequests
+    `INSERT INTO callbackrequests
        (national_id, patient_name, phone_number, reason, notes, priority, created_by)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -144,7 +144,7 @@ exports.listCallbacks = async (filters = {}) => {
   const offset = (pg - 1) * lim;
 
   const [countRows] = await db.query(
-    `SELECT COUNT(*) AS total FROM CallbackRequests cb WHERE ${where}`,
+    `SELECT COUNT(*) AS total FROM callbackrequests cb WHERE ${where}`,
     params,
   );
 
@@ -152,8 +152,8 @@ exports.listCallbacks = async (filters = {}) => {
     `SELECT
        cb.*,
        CONCAT(u.first_name, ' ', u.last_name) AS created_by_name,
-       (SELECT COUNT(*) FROM ContactAttempts ca WHERE ca.callback_id = cb.callback_id) AS attempt_count
-     FROM CallbackRequests cb
+       (SELECT COUNT(*) FROM contactattempts ca WHERE ca.callback_id = cb.callback_id) AS attempt_count
+     FROM callbackrequests cb
      JOIN users u ON cb.created_by = u.user_id
      WHERE ${where}
      ORDER BY
@@ -169,7 +169,7 @@ exports.listCallbacks = async (filters = {}) => {
 exports.getCallback = async (callbackId) => {
   const [rows] = await db.query(
     `SELECT cb.*, CONCAT(u.first_name, ' ', u.last_name) AS created_by_name
-     FROM CallbackRequests cb
+     FROM callbackrequests cb
      JOIN users u ON cb.created_by = u.user_id
      WHERE cb.callback_id = ?`,
     [callbackId],
@@ -180,7 +180,7 @@ exports.getCallback = async (callbackId) => {
 
 exports.updateCallbackStatus = async (callbackId, status, userId) => {
   await db.query(
-    `UPDATE CallbackRequests SET status = ? WHERE callback_id = ?`,
+    `UPDATE callbackrequests SET status = ? WHERE callback_id = ?`,
     [status, callbackId],
   );
   const cb = await exports.getCallback(callbackId);
@@ -203,7 +203,7 @@ exports.addContactAttempt = async (callbackId, data, userId) => {
   const cb = await exports.getCallback(callbackId);
 
   const [result] = await db.query(
-    `INSERT INTO ContactAttempts
+    `INSERT INTO contactattempts
        (callback_id, national_id, outcome, notes, contacted_by)
      VALUES (?, ?, ?, ?, ?)`,
     [callbackId, cb.national_id, outcome, notes || null, userId],
@@ -211,7 +211,7 @@ exports.addContactAttempt = async (callbackId, data, userId) => {
 
   if (outcome === "Answered") {
     await db.query(
-      `UPDATE CallbackRequests SET status = 'Contacted' WHERE callback_id = ?`,
+      `UPDATE callbackrequests SET status = 'Contacted' WHERE callback_id = ?`,
       [callbackId],
     );
   }

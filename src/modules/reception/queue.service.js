@@ -8,7 +8,7 @@ const realtime = require("./realtime.service");
 
 async function getQueueEntryByAppointment(appointmentId) {
   const [rows] = await db.query(
-    `SELECT * FROM QueueEntries WHERE appointment_id = ?`,
+    `SELECT * FROM queueentries WHERE appointment_id = ?`,
     [appointmentId],
   );
   return rows[0] || null;
@@ -18,8 +18,8 @@ async function reorderQueue(connection) {
   const conn = connection || db;
   const [entries] = await conn.query(
     `SELECT q.queue_id, q.appointment_id, q.priority_level, a.check_in_at
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      WHERE q.board_status NOT IN ('Completed')
        AND a.appointment_date = CURDATE()
      ORDER BY q.queue_id`,
@@ -47,7 +47,7 @@ async function reorderQueue(connection) {
     const position = i + 1;
     const estWait = Math.max(0, (position - 1) * 15);
     await conn.query(
-      `UPDATE QueueEntries
+      `UPDATE queueentries
        SET queue_position = ?, priority_score = ?, priority_reason = ?, estimated_wait_minutes = ?
        WHERE queue_id = ?`,
       [position, item.priority_score, item.priority_reason, estWait, item.queue_id],
@@ -65,14 +65,14 @@ async function ensureQueueEntry(appointmentId, priorityLevel, connection) {
 
   const [maxPos] = await conn.query(
     `SELECT COALESCE(MAX(queue_position), 0) AS max_pos
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      WHERE a.appointment_date = CURDATE() AND q.board_status NOT IN ('Completed')`,
   );
   const position = (maxPos[0]?.max_pos || 0) + 1;
 
   const [result] = await conn.query(
-    `INSERT INTO QueueEntries
+    `INSERT INTO queueentries
        (appointment_id, queue_position, board_status, priority_level, priority_score, priority_reason)
      VALUES (?, ?, 'Waiting', ?, ?, ?)`,
     [
@@ -100,7 +100,7 @@ async function logQueueHistory(
 ) {
   const conn = connection || db;
   await conn.query(
-    `INSERT INTO QueueHistory
+    `INSERT INTO queuehistory
        (queue_id, appointment_id, action, from_position, to_position, reason, created_by)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [queueId, appointmentId, action, fromPos, toPos, reason, userId],
@@ -113,7 +113,7 @@ async function updateBoardStatus(appointmentId, boardStatus, userId) {
 
   const fromPos = entry.queue_position;
   await db.query(
-    `UPDATE QueueEntries SET board_status = ?, called_at = IF(? = 'Called', NOW(), called_at) WHERE appointment_id = ?`,
+    `UPDATE queueentries SET board_status = ?, called_at = IF(? = 'Called', NOW(), called_at) WHERE appointment_id = ?`,
     [boardStatus, boardStatus, appointmentId],
   );
 
@@ -151,8 +151,8 @@ async function getQueue(filters = {}) {
 
   const [countRows] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      JOIN patients p ON a.national_id = p.national_id
      WHERE ${where}`,
     params,
@@ -178,8 +178,8 @@ async function getQueue(filters = {}) {
        CONCAT(u.first_name, ' ', u.last_name) AS doctor_name,
        u.user_id AS doctor_id,
        TIMESTAMPDIFF(MINUTE, COALESCE(a.check_in_at, q.created_at), NOW()) AS waiting_minutes
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE ${where}
@@ -194,7 +194,7 @@ async function getQueue(filters = {}) {
 async function getQueueHistory(appointmentId) {
   const [rows] = await db.query(
     `SELECT h.*, CONCAT(u.first_name, ' ', u.last_name) AS actor_name
-     FROM QueueHistory h
+     FROM queuehistory h
      LEFT JOIN users u ON h.created_by = u.user_id
      WHERE h.appointment_id = ?
      ORDER BY h.created_at DESC
@@ -231,8 +231,8 @@ async function getArrivalBoard(filters = {}) {
        p.national_id,
        CONCAT(u.first_name, ' ', u.last_name) AS doctor_name,
        TIMESTAMPDIFF(MINUTE, COALESCE(a.check_in_at, q.created_at), NOW()) AS waiting_minutes
-     FROM QueueEntries q
-     JOIN Appointments a ON q.appointment_id = a.appointment_id
+     FROM queueentries q
+     JOIN appointments a ON q.appointment_id = a.appointment_id
      JOIN patients p ON a.national_id = p.national_id
      JOIN users u ON a.doctor_id = u.user_id
      WHERE ${where}

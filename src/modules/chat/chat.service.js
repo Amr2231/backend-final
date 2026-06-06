@@ -22,7 +22,7 @@ exports.sendMessage = async (sender_id, payload) => {
   if (!receiver.length) throw { status: 404, message: "Receiver not found" };
 
   const [result] = await db.query(
-    `INSERT INTO InternalMessages
+    `INSERT INTO internalmessages
        (sender_id, receiver_id, message, patient_id, appointment_id, attachment_path)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [
@@ -84,7 +84,7 @@ exports.getConversation = async (user_id, other_id, page = 1, limit = 30, patien
        m.attachment_path,
        CONCAT(u.first_name,' ',u.last_name) AS sender_name,
        CONCAT(p.first_name,' ',p.last_name) AS patient_name
-     FROM InternalMessages m
+     FROM internalmessages m
      JOIN users  u ON m.sender_id = u.user_id
      LEFT JOIN patients p ON m.patient_id = p.national_id
      WHERE
@@ -96,7 +96,7 @@ exports.getConversation = async (user_id, other_id, page = 1, limit = 30, patien
   );
 
   await db.query(
-    `UPDATE InternalMessages
+    `UPDATE internalmessages
      SET is_read = 1, read_at = NOW()
      WHERE sender_id = ? AND receiver_id = ? AND is_read = 0`,
     [other_id, user_id],
@@ -130,16 +130,16 @@ exports.getInbox = async (user_id) => {
            PARTITION BY LEAST(sender_id,receiver_id), GREATEST(sender_id,receiver_id)
            ORDER BY created_at DESC
          ) rn
-       FROM InternalMessages
+       FROM internalmessages
        WHERE sender_id = ? OR receiver_id = ?
      ) latest ON u.user_id = latest.other_id AND latest.rn = 1
      LEFT JOIN (
        SELECT sender_id, COUNT(*) AS cnt
-       FROM InternalMessages
+       FROM internalmessages
        WHERE receiver_id = ? AND is_read = 0
        GROUP BY sender_id
      ) unread ON unread.sender_id = u.user_id
-     LEFT JOIN UserPresence up ON up.user_id = u.user_id
+     LEFT JOIN userpresence up ON up.user_id = u.user_id
      WHERE u.user_id != ?
      ORDER BY latest.created_at DESC`,
     [user_id, user_id, user_id, user_id, user_id],
@@ -157,7 +157,7 @@ exports.getPatientContextThreads = async (user_id) => {
        COUNT(*) AS message_count,
        MAX(m.created_at) AS last_message_at,
        SUM(CASE WHEN m.receiver_id = ? AND m.is_read = 0 THEN 1 ELSE 0 END) AS unread_count
-     FROM InternalMessages m
+     FROM internalmessages m
      JOIN patients p ON m.patient_id = p.national_id
      WHERE m.patient_id IS NOT NULL
        AND (m.sender_id = ? OR m.receiver_id = ?)
@@ -171,7 +171,7 @@ exports.getPatientContextThreads = async (user_id) => {
 exports.getUnreadCount = async (user_id) => {
   const [rows] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM InternalMessages
+     FROM internalmessages
      WHERE receiver_id = ? AND is_read = 0`,
     [user_id],
   );
@@ -180,7 +180,7 @@ exports.getUnreadCount = async (user_id) => {
 
 exports.setTyping = async (user_id, typing_to_user_id) => {
   await db.query(
-    `INSERT INTO UserPresence (user_id, is_online, typing_to_user_id, last_seen_at)
+    `INSERT INTO userpresence (user_id, is_online, typing_to_user_id, last_seen_at)
      VALUES (?, 1, ?, NOW())
      ON DUPLICATE KEY UPDATE typing_to_user_id = VALUES(typing_to_user_id), last_seen_at = NOW()`,
     [user_id, typing_to_user_id || null],
@@ -216,7 +216,7 @@ exports.searchUsers = async (user_id, query = "", limit = 20) => {
        COALESCE(up.is_online, 0) AS is_online
      FROM users u
      JOIN roles r ON u.role_id = r.role_id
-     LEFT JOIN UserPresence up ON up.user_id = u.user_id
+     LEFT JOIN userpresence up ON up.user_id = u.user_id
      ${where}
      ORDER BY u.first_name, u.last_name
      LIMIT ?`,
