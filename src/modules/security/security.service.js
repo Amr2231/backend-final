@@ -57,9 +57,9 @@ exports.recordFailedLogin = async (email, ip = null) => {
     [attempts, lockout, user.user_id],
   );
 
-  // Write to AuditLogs
+  // Write to auditLogs
   await db.query(
-    `INSERT INTO AuditLogs
+    `INSERT INTO auditLogs
        (actor_id, actor_name, actor_role, action, entity, entity_id, description, ip_address)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -134,7 +134,7 @@ exports.getSecurityOverview = async () => {
   // Failed logins last 24h
   const [[recentFails]] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM AuditLogs
+     FROM auditLogs
      WHERE action = 'FAILED_LOGIN'
        AND created_at >= NOW() - INTERVAL 24 HOUR`,
   );
@@ -142,7 +142,7 @@ exports.getSecurityOverview = async () => {
   // Failed logins last 7 days by day
   const [failsByDay] = await db.query(
     `SELECT DATE(created_at) AS day, COUNT(*) AS count
-     FROM AuditLogs
+     FROM auditLogs
      WHERE action = 'FAILED_LOGIN'
        AND created_at >= NOW() - INTERVAL 7 DAY
      GROUP BY DATE(created_at)
@@ -152,7 +152,7 @@ exports.getSecurityOverview = async () => {
   // Top IPs with failures
   const [topIPs] = await db.query(
     `SELECT ip_address, COUNT(*) AS attempts
-     FROM AuditLogs
+     FROM auditLogs
      WHERE action = 'FAILED_LOGIN'
        AND ip_address IS NOT NULL
        AND created_at >= NOW() - INTERVAL 24 HOUR
@@ -229,7 +229,7 @@ exports.getFailedLoginLogs = async (filters = {}) => {
   }
 
   const [rows] = await db.query(
-    `SELECT * FROM AuditLogs
+    `SELECT * FROM auditLogs
      ${where}
      ORDER BY created_at DESC
      LIMIT ? OFFSET ?`,
@@ -237,7 +237,7 @@ exports.getFailedLoginLogs = async (filters = {}) => {
   );
 
   const [[count]] = await db.query(
-    `SELECT COUNT(*) AS total FROM AuditLogs ${where}`,
+    `SELECT COUNT(*) AS total FROM auditLogs ${where}`,
     cParams,
   );
 

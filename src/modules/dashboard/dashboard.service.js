@@ -78,7 +78,7 @@ exports.getDashboard = async () => {
        SUM(av.status = 'Approved')                AS approved,
        SUM(av.status = 'Rejected')                AS rejected,
        SUM(av.status = 'Edited')                  AS edited
-     FROM AI_Results ar
+     FROM aI_Results ar
      LEFT JOIN AI_Validation av ON ar.study_id = av.study_id`,
   );
 
@@ -103,13 +103,13 @@ exports.getDashboard = async () => {
   // ── AUDIT ──
   const [[audit]] = await db.query(
     `SELECT COUNT(*) AS today
-     FROM AuditLogs
+     FROM auditLogs
      WHERE DATE(created_at) = CURDATE()`,
   );
 
   const [[failedLogins24h]] = await db.query(
     `SELECT COUNT(*) AS count
-     FROM AuditLogs
+     FROM auditLogs
      WHERE action = 'FAILED_LOGIN'
        AND created_at >= NOW() - INTERVAL 24 HOUR`,
   );
@@ -417,7 +417,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
        SUM(has_hfref = 1 AND has_lvh = 1)                   AS both_conditions,
        SUM(ejection_fraction >= 55)                          AS normal,
        SUM(ejection_fraction >= 40 AND ejection_fraction < 55) AS borderline
-     FROM AI_Results ar
+     FROM aI_Results ar
      JOIN studies s ON ar.study_id = s.study_id
      JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?`,

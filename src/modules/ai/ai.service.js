@@ -183,7 +183,7 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
     // ======================================
     await db.query(
       `
-      INSERT INTO AI_Results (
+      INSERT INTO aI_Results (
         study_id,
         ejection_fraction,
         wall_thickness,
@@ -309,7 +309,7 @@ exports.editAIResult = async (study_id, doctor_id, edits) => {
   // ================= CHECK AI RESULT =================
   const [aiRows] = await db.query(
     `SELECT * 
-     FROM AI_Results 
+     FROM aI_Results 
      WHERE study_id=?`,
     [study_id],
   );
@@ -400,7 +400,7 @@ exports.editAIResult = async (study_id, doctor_id, edits) => {
 
     // Update field
     await db.query(
-      `UPDATE AI_Results
+      `UPDATE aI_Results
        SET ${key}=?
        WHERE study_id=?`,
       [newValue, study_id],
@@ -428,7 +428,7 @@ exports.editAIResult = async (study_id, doctor_id, edits) => {
   // ================= GET UPDATED RESULT =================
   const [updatedRows] = await db.query(
     `SELECT *
-     FROM AI_Results
+     FROM aI_Results
      WHERE study_id=?`,
     [study_id],
   );

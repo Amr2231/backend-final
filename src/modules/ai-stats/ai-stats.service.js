@@ -7,7 +7,7 @@ const db = require("../../config/db");
 exports.getAIStats = async () => {
   // Total runs
   const [[totalRuns]] = await db.query(
-    `SELECT COUNT(*) AS total FROM AI_Results`,
+    `SELECT COUNT(*) AS total FROM aI_Results`,
   );
 
   // By validation status
@@ -24,7 +24,7 @@ exports.getAIStats = async () => {
        SUM(CASE WHEN has_hfref=1 AND has_lvh=0 THEN 1 ELSE 0 END) AS hf_only,
        SUM(CASE WHEN has_hfref=0 AND has_lvh=1 THEN 1 ELSE 0 END) AS lvh_only,
        SUM(CASE WHEN has_hfref=1 AND has_lvh=1 THEN 1 ELSE 0 END) AS both_count
-     FROM AI_Results`,
+     FROM aI_Results`,
   );
 
   // Average EF + wall thickness
@@ -32,13 +32,13 @@ exports.getAIStats = async () => {
     `SELECT
        ROUND(AVG(ejection_fraction), 2) AS avg_ef,
        ROUND(AVG(wall_thickness), 2)    AS avg_wall_thickness
-     FROM AI_Results`,
+     FROM aI_Results`,
   );
 
   // Runs last 7 days
   const [runsByDay] = await db.query(
     `SELECT DATE(created_at) AS day, COUNT(*) AS count
-     FROM AI_Results
+     FROM aI_Results
      WHERE created_at >= NOW() - INTERVAL 7 DAY
      GROUP BY DATE(created_at)
      ORDER BY day ASC`,
@@ -117,7 +117,7 @@ exports.getAIResults = async (filters = {}) => {
        av.validated_by,
        av.validated_at,
        CONCAT(u.first_name,' ',u.last_name) AS validated_by_name
-     FROM AI_Results ar
+     FROM aI_Results ar
      LEFT JOIN AI_Validation av ON ar.study_id = av.study_id
      LEFT JOIN users u ON av.validated_by = u.user_id
      ${where}
@@ -128,7 +128,7 @@ exports.getAIResults = async (filters = {}) => {
 
   const [[count]] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM AI_Results ar
+     FROM aI_Results ar
      LEFT JOIN AI_Validation av ON ar.study_id = av.study_id
      ${where}`,
     cParams,

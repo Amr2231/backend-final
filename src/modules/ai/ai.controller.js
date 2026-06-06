@@ -88,7 +88,7 @@ exports.getAIResult = async (req, res) => {
     const { study_id } = req.params;
 
     const [aiRows] = await db.query(
-      `SELECT * FROM AI_Results WHERE study_id = ?`,
+      `SELECT * FROM aI_Results WHERE study_id = ?`,
       [study_id],
     );
 
