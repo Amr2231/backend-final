@@ -47,7 +47,7 @@ router.get(
       const { study_id, image_id } = req.params;
 
       const [image] = await db.query(
-        `SELECT file_path FROM Images
+        `SELECT file_path FROM images
          WHERE image_id = ? AND study_id = ?`,
         [image_id, study_id],
       );

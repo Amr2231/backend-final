@@ -81,7 +81,7 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
         }
       }
       await db.query(
-        `INSERT INTO Images 
+        `INSERT INTO images 
         (study_id, view_type, file_path, file_format, uploaded_by)
         VALUES (?, ?, ?, ?, ?)`,
         [study_id, view_type, filePath, mimeType, doctor_id],
@@ -334,7 +334,7 @@ exports.deleteStudyNote = async (study_id, note_id) => {
 exports.deleteImage = async (study_id, image_id, doctor_id) => {
   const [image] = await db.query(
     `SELECT i.image_id, i.file_path
-     FROM Images i
+     FROM images i
      JOIN studies s ON i.study_id = s.study_id
      JOIN patients p ON s.national_id = p.national_id
      WHERE i.image_id = ?
@@ -349,7 +349,7 @@ exports.deleteImage = async (study_id, image_id, doctor_id) => {
 
   const filePath = image[0].file_path;
 
-  await db.query(`DELETE FROM Images WHERE image_id = ?`, [image_id]);
+  await db.query(`DELETE FROM images WHERE image_id = ?`, [image_id]);
 
   if (filePath && fs.existsSync(path.resolve(filePath))) {
     fs.unlink(path.resolve(filePath), () => {});

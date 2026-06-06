@@ -103,8 +103,8 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
     // 2. GET FILE [edited by farah]
     // ======================================
     const imageQuery = image_id
-      ? "SELECT file_path FROM Images WHERE study_id = ? AND image_id = ? LIMIT 1"
-      : "SELECT file_path FROM Images WHERE study_id = ? LIMIT 1";
+      ? "SELECT file_path FROM images WHERE study_id = ? AND image_id = ? LIMIT 1"
+      : "SELECT file_path FROM images WHERE study_id = ? LIMIT 1";
 
     const imageParams = image_id ? [study_id, image_id] : [study_id];
     const [imageRows] = await db.query(imageQuery, imageParams);

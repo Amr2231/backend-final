@@ -1107,7 +1107,7 @@ exports.getAssignedPatients = async (
   for (const patient of rows) {
     const [images] = await db.query(
       `SELECT image_id, view_type, file_path, file_format
-       FROM Images WHERE study_id = ?`,
+       FROM images WHERE study_id = ?`,
       [patient.study_id],
     );
 
@@ -1193,7 +1193,7 @@ exports.getPatientByStudyId = async (doctor_id, study_id) => {
 
   const [images] = await db.query(
     `SELECT image_id, view_type, file_path, file_format
-     FROM Images WHERE study_id = ?`,
+     FROM images WHERE study_id = ?`,
     [patient.study_id],
   );
 
