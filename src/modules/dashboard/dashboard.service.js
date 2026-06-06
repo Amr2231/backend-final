@@ -78,7 +78,7 @@ exports.getDashboard = async () => {
        SUM(av.status = 'Approved')                AS approved,
        SUM(av.status = 'Rejected')                AS rejected,
        SUM(av.status = 'Edited')                  AS edited
-     FROM aI_Results ar
+     FROM ai_Results ar
      LEFT JOIN AI_Validation av ON ar.study_id = av.study_id`,
   );
 
@@ -417,7 +417,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
        SUM(has_hfref = 1 AND has_lvh = 1)                   AS both_conditions,
        SUM(ejection_fraction >= 55)                          AS normal,
        SUM(ejection_fraction >= 40 AND ejection_fraction < 55) AS borderline
-     FROM aI_Results ar
+     FROM ai_Results ar
      JOIN studies s ON ar.study_id = s.study_id
      JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?`,

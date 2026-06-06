@@ -73,7 +73,7 @@ exports.getWatchlist = async (doctor_id) => {
          ORDER BY study_date DESC LIMIT 1
        )
      LEFT JOIN Reports r ON r.study_id = s.study_id
-     LEFT JOIN aI_Results ai ON ai.study_id = s.study_id
+     LEFT JOIN ai_Results ai ON ai.study_id = s.study_id
      WHERE w.doctor_id = ?
      ORDER BY
        FIELD(w.priority,'critical','monitor','stable'),
