@@ -19,7 +19,7 @@ exports.log = async ({
   try {
     const geo = lookupGeo(ip_address);
     await db.query(
-      `INSERT INTO auditLogs
+      `INSERT INTO auditlogs
         (actor_id, actor_name, actor_role, action, entity, entity_id, description, ip_address, geo_country, geo_city)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -38,7 +38,7 @@ exports.log = async ({
   } catch (err) {
     try {
       await db.query(
-        `INSERT INTO auditLogs
+        `INSERT INTO auditlogs
           (actor_id, actor_name, actor_role, action, entity, entity_id, description, ip_address)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -147,7 +147,7 @@ exports.getLogs = async (filters = {}) => {
          u.email
        ) AS actor_display_name,
        COALESCE(NULLIF(TRIM(al.actor_role), ''), r.role_name) AS actor_display_role
-     FROM auditLogs al
+     FROM auditlogs al
      LEFT JOIN users u ON al.actor_id = u.user_id
      LEFT JOIN roles r ON u.role_id = r.role_id
      ${where}
@@ -164,7 +164,7 @@ exports.getLogs = async (filters = {}) => {
   }
 
   const [countRows] = await db.query(
-    `SELECT COUNT(*) AS total FROM auditLogs al ${where}`,
+    `SELECT COUNT(*) AS total FROM auditlogs al ${where}`,
     cParams,
   );
 

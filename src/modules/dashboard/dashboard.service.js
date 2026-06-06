@@ -89,7 +89,7 @@ exports.getDashboard = async () => {
        SUM(report_status = 'Written')     AS written,
        SUM(report_status = 'Signed')      AS signed,
        SUM(DATE(created_at) = CURDATE())  AS today
-     FROM Reports`,
+     FROM reports`,
   );
 
   // ── NOTIFICATIONS ──
@@ -103,13 +103,13 @@ exports.getDashboard = async () => {
   // ── AUDIT ──
   const [[audit]] = await db.query(
     `SELECT COUNT(*) AS today
-     FROM auditLogs
+     FROM auditlogs
      WHERE DATE(created_at) = CURDATE()`,
   );
 
   const [[failedLogins24h]] = await db.query(
     `SELECT COUNT(*) AS count
-     FROM auditLogs
+     FROM auditlogs
      WHERE action = 'FAILED_LOGIN'
        AND created_at >= NOW() - INTERVAL 24 HOUR`,
   );
@@ -170,7 +170,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
     `SELECT ROUND(AVG(GREATEST(0, TIMESTAMPDIFF(MINUTE, s.study_date, r.signed_at)))) AS avg_minutes
      FROM studies s
      JOIN patients p ON s.national_id = p.national_id
-     JOIN Reports r  ON r.study_id = s.study_id
+     JOIN reports r  ON r.study_id = s.study_id
      WHERE p.doctor_id = ?
        AND r.report_status = 'Signed'
        AND r.signed_at IS NOT NULL
@@ -225,7 +225,7 @@ exports.getDoctorDashboard = async (doctor_id) => {
               s.status AS study_status, r.report_status,
               ROW_NUMBER() OVER (PARTITION BY s.national_id ORDER BY s.study_date DESC, s.study_id DESC) AS rn
        FROM studies s
-       LEFT JOIN Reports r ON r.study_id = s.study_id
+       LEFT JOIN reports r ON r.study_id = s.study_id
      ) latest ON latest.national_id = p.national_id AND latest.rn = 1
      WHERE p.doctor_id = ? AND p.is_active = 1
      ORDER BY latest.study_date DESC
@@ -351,10 +351,10 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
       ? Math.round((completed[0].total / totalStudies[0].total) * 100)
       : 0;
 
-  // Reports signed on-time (within 24h of study)
+  // reports signed on-time (within 24h of study)
   const [onTime] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Reports r
+     FROM reports r
      JOIN studies s ON r.study_id = s.study_id
      JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?
@@ -366,7 +366,7 @@ exports.getDoctorPerformance = async (doctor_id, period = "month") => {
 
   const [totalReports] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM Reports r
+     FROM reports r
      JOIN studies s ON r.study_id = s.study_id
      JOIN patients p ON s.national_id = p.national_id
      WHERE p.doctor_id = ?

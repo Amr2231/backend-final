@@ -846,7 +846,7 @@ SELECT
   LEFT JOIN users u
     ON p.doctor_id = u.user_id
 
-    LEFT JOIN Reports r ON r.study_id = s.study_id 
+    LEFT JOIN reports r ON r.study_id = s.study_id 
   ${baseWhere}
 
   ORDER BY s.study_date ${orderDir}
@@ -868,7 +868,7 @@ SELECT
     LEFT JOIN users u
       ON p.doctor_id = u.user_id
 
-      LEFT JOIN Reports r ON r.study_id = s.study_id
+      LEFT JOIN reports r ON r.study_id = s.study_id
 
     ${baseWhere}
     `,
@@ -1081,7 +1081,7 @@ exports.getAssignedPatients = async (
     FROM patients p
     JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
-    LEFT JOIN Reports r ON r.study_id = s.study_id
+    LEFT JOIN reports r ON r.study_id = s.study_id
     ${baseWhere}
     ORDER BY s.study_date ${orderDir}
     LIMIT ? OFFSET ?
@@ -1095,7 +1095,7 @@ exports.getAssignedPatients = async (
     SELECT COUNT(*) AS total
     FROM patients p
     JOIN studies s ON p.national_id = s.national_id
-    LEFT JOIN Reports r ON r.study_id = s.study_id
+    LEFT JOIN reports r ON r.study_id = s.study_id
     ${baseWhere}
     `,
     countParams,
@@ -1113,7 +1113,7 @@ exports.getAssignedPatients = async (
 
     const [reports] = await db.query(
       `SELECT report_id, report_status, created_at
-       FROM Reports WHERE study_id = ?`,
+       FROM reports WHERE study_id = ?`,
       [patient.study_id],
     );
 
@@ -1178,7 +1178,7 @@ exports.getPatientByStudyId = async (doctor_id, study_id) => {
     FROM studies s
     JOIN patients p ON s.national_id = p.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
-    LEFT JOIN Reports r ON r.study_id = s.study_id
+    LEFT JOIN reports r ON r.study_id = s.study_id
     WHERE s.study_id = ? AND p.doctor_id = ?
     LIMIT 1
     `,
@@ -1199,7 +1199,7 @@ exports.getPatientByStudyId = async (doctor_id, study_id) => {
 
   const [reports] = await db.query(
     `SELECT report_id, report_status, created_at
-     FROM Reports WHERE study_id = ?`,
+     FROM reports WHERE study_id = ?`,
     [patient.study_id],
   );
 
@@ -1374,7 +1374,7 @@ exports.getDoctorHistoricalPatients = async (
     FROM patients p
     JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
-    LEFT JOIN Reports r ON r.study_id = s.study_id
+    LEFT JOIN reports r ON r.study_id = s.study_id
     ${baseWhere}
     ORDER BY s.study_date ${orderDir}
     LIMIT ? OFFSET ?`,
@@ -1386,7 +1386,7 @@ exports.getDoctorHistoricalPatients = async (
      FROM patients p
      JOIN studies s ON p.national_id = s.national_id
      LEFT JOIN users u ON p.doctor_id = u.user_id
-     LEFT JOIN Reports r ON r.study_id = s.study_id
+     LEFT JOIN reports r ON r.study_id = s.study_id
      ${baseWhere}`,
     countParams,
   );
@@ -1419,7 +1419,7 @@ exports.getRecentPatients = async (doctor_id, page = 1, limit = 20) => {
     FROM patients p
     JOIN studies s ON p.national_id = s.national_id
     LEFT JOIN users u ON p.doctor_id = u.user_id
-    LEFT JOIN Reports r ON r.study_id = s.study_id
+    LEFT JOIN reports r ON r.study_id = s.study_id
     WHERE p.doctor_id = ? AND p.is_active = 1
     ORDER BY s.study_date DESC
     LIMIT ? OFFSET ?`,

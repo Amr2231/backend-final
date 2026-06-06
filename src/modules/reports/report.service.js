@@ -118,7 +118,7 @@ exports.openReport = async (study_id) => {
   const [existing] = await db.query(
     `
     SELECT *
-    FROM Reports
+    FROM reports
     WHERE study_id = ?
     `,
     [study_id],
@@ -130,7 +130,7 @@ exports.openReport = async (study_id) => {
   if (!existing.length) {
     await db.query(
       `
-      INSERT INTO Reports
+      INSERT INTO reports
       (
         study_id,
         doctor_id,
@@ -153,7 +153,7 @@ exports.openReport = async (study_id) => {
   const [report] = await db.query(
     `
     SELECT *
-    FROM Reports
+    FROM reports
     WHERE study_id = ?
     `,
     [study_id],
@@ -166,7 +166,7 @@ exports.openReport = async (study_id) => {
 // AUTO SAVE (DOCTOR INTERPRETATION)
 // ======================================================
 exports.autoSaveReport = async (study_id, content) => {
-  const [rows] = await db.query(`SELECT * FROM Reports WHERE study_id=?`, [
+  const [rows] = await db.query(`SELECT * FROM reports WHERE study_id=?`, [
     study_id,
   ]);
 
@@ -181,7 +181,7 @@ exports.autoSaveReport = async (study_id, content) => {
       throw { status: 404, message: "Study not found" };
     }
     await db.query(
-      `INSERT INTO Reports (study_id, doctor_id, report_status, report_content)
+      `INSERT INTO reports (study_id, doctor_id, report_status, report_content)
        VALUES (?, ?, 'Written', ?)`,
       [study_id, studyRows[0].doctor_id, content],
     );
@@ -197,7 +197,7 @@ exports.autoSaveReport = async (study_id, content) => {
     throw { status: 400, message: "Cannot edit finalized report" };
   }
 
-  await db.query(`UPDATE Reports SET report_content=? WHERE study_id=?`, [
+  await db.query(`UPDATE reports SET report_content=? WHERE study_id=?`, [
     content,
     study_id,
   ]);
@@ -266,7 +266,7 @@ exports.insertAIFindings = async (
 
   // ================= CHECK REPORT =================
   const [reportRows] = await db.query(
-    `SELECT * FROM Reports WHERE study_id=?`,
+    `SELECT * FROM reports WHERE study_id=?`,
     [study_id],
   );
 
@@ -274,7 +274,7 @@ exports.insertAIFindings = async (
   if (!reportRows.length) {
     await db.query(
       `
-      INSERT INTO Reports
+      INSERT INTO reports
       (
         study_id,
         doctor_id,
@@ -293,7 +293,7 @@ exports.insertAIFindings = async (
   // ================= UPDATE REPORT =================
   await db.query(
     `
-    UPDATE Reports
+    UPDATE reports
     SET report_content=?
     WHERE study_id=?
     `,
@@ -309,7 +309,7 @@ exports.insertAIFindings = async (
 // FINALIZE REPORT [edit by farah] (SIGNED BY DOCTOR)
 // ======================================================
 exports.finalizeReport = async (study_id, doctor_id) => {
-  const [rows] = await db.query(`SELECT * FROM Reports WHERE study_id=?`, [
+  const [rows] = await db.query(`SELECT * FROM reports WHERE study_id=?`, [
     study_id,
   ]);
 
@@ -327,7 +327,7 @@ exports.finalizeReport = async (study_id, doctor_id) => {
 
   // ================= SIGN REPORT =================
   await db.query(
-    `UPDATE Reports
+    `UPDATE reports
      SET report_status='Signed',
          signed_at=NOW(),
          signed_by=?
@@ -362,7 +362,7 @@ exports.getReport = async (study_id) => {
       CONCAT(u.first_name,' ',u.last_name) AS assigned_doctor,
       CONCAT(u2.first_name,' ',u2.last_name) AS signing_doctor
 
-    FROM Reports r
+    FROM reports r
     JOIN studies s ON r.study_id = s.study_id
     JOIN patients p ON s.national_id = p.national_id
     LEFT JOIN users u ON r.doctor_id = u.user_id
@@ -835,7 +835,7 @@ exports.exportReport = async (study_id) => {
   doc.end();
 
   const publicPath = `/uploads/reports/${fileName}`;
-  await db.query(`UPDATE Reports SET report_file_path = ? WHERE study_id = ?`, [
+  await db.query(`UPDATE reports SET report_file_path = ? WHERE study_id = ?`, [
     publicPath,
     study_id,
   ]);

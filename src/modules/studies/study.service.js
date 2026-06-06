@@ -194,7 +194,7 @@ exports.completeStudy = async (study_id, doctor_id) => {
   // ================= 3. CHECK REPORT =================
   const [report] = await db.query(
     `SELECT report_status 
-     FROM Reports 
+     FROM reports 
      WHERE study_id=?`,
     [study_id],
   );

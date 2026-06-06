@@ -26,7 +26,7 @@ exports.getAccessHeatmap = async (filters = {}) => {
        HOUR(created_at)        AS hour_of_day,
        DAYOFWEEK(created_at)   AS day_of_week,
        COUNT(*)                AS count
-     FROM auditLogs
+     FROM auditlogs
      ${where}
      GROUP BY HOUR(created_at), DAYOFWEEK(created_at)
      ORDER BY day_of_week, hour_of_day`,
@@ -40,7 +40,7 @@ exports.getAccessHeatmap = async (filters = {}) => {
        actor_name,
        actor_role,
        COUNT(*) AS total_actions
-     FROM auditLogs
+     FROM auditlogs
      ${where}
      GROUP BY actor_id, actor_name, actor_role
      ORDER BY total_actions DESC
@@ -51,7 +51,7 @@ exports.getAccessHeatmap = async (filters = {}) => {
   // actions breakdown
   const [actionBreakdown] = await db.query(
     `SELECT action, COUNT(*) AS count
-     FROM auditLogs
+     FROM auditlogs
      ${where}
      GROUP BY action
      ORDER BY count DESC`,
@@ -63,7 +63,7 @@ exports.getAccessHeatmap = async (filters = {}) => {
 
 // ==========================================
 // FILE ACCESS MONITORING
-// Reads from auditLogs where entity = 'Image' or 'Report'
+// Reads from auditlogs where entity = 'Image' or 'Report'
 // (You need to log these in study.routes.js — see patch below)
 // ==========================================
 exports.getFileAccessLogs = async (filters = {}) => {
@@ -105,7 +105,7 @@ exports.getFileAccessLogs = async (filters = {}) => {
   }
 
   const [rows] = await db.query(
-    `SELECT * FROM auditLogs
+    `SELECT * FROM auditlogs
      ${where}
      ORDER BY created_at DESC
      LIMIT ? OFFSET ?`,
@@ -113,7 +113,7 @@ exports.getFileAccessLogs = async (filters = {}) => {
   );
 
   const [[count]] = await db.query(
-    `SELECT COUNT(*) AS total FROM auditLogs ${where}`,
+    `SELECT COUNT(*) AS total FROM auditlogs ${where}`,
     cParams,
   );
 
@@ -162,7 +162,7 @@ exports.getGeoLoginMap = async (filters = {}) => {
        action,
        ip_address,
        created_at
-     FROM auditLogs
+     FROM auditlogs
      ${where}
      ORDER BY created_at DESC
      LIMIT 500`,
