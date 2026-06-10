@@ -26,6 +26,30 @@ function getIP(req) {
 }
 
 // ==========================================
+// HELPER — get all user_ids by role
+// ==========================================
+async function getUsersByRole(role) {
+  try {
+    const [rows] = await db.query(
+      `SELECT user_id FROM users WHERE role_name = ? AND is_active = 1`,
+      [role],
+    );
+    return rows.map((r) => r.user_id);
+  } catch {
+    return [];
+  }
+}
+
+// ==========================================
+// HELPER — notify multiple users
+// ==========================================
+async function notifyMany(userIds, payload) {
+  for (const user_id of userIds) {
+    await notifService.createNotification({ user_id, ...payload });
+  }
+}
+
+// ==========================================
 // HELPER — get doctor_id from study
 // ==========================================
 async function getDoctorFromStudy(study_id) {
@@ -43,6 +67,21 @@ async function getDoctorFromStudy(study_id) {
 }
 
 // ==========================================
+// HELPER — get receptionist_id from study
+// ==========================================
+async function getReceptionistFromStudy(study_id) {
+  try {
+    const [rows] = await db.query(
+      `SELECT created_by FROM studies WHERE study_id = ?`,
+      [study_id],
+    );
+    return rows[0]?.created_by || null;
+  } catch {
+    return null;
+  }
+}
+
+// ==========================================
 // NOTIFY + AUDIT AFTER RESPONSE SENT
 // ==========================================
 function notifyAfter(handler) {
@@ -52,7 +91,6 @@ function notifyAfter(handler) {
     res.json = async function (body) {
       originalJson(body);
 
-      // Only process successful responses
       if (!body?.success) return;
 
       const actor = getActor(req);
@@ -143,9 +181,13 @@ exports.onAIEdit = notifyAfter(async ({ req, body, actor, ip, study_id }) => {
 });
 
 // ---------- Report Signed ----------
+// Notifies: Doctor + Receptionist (who created the study) + Admins
 exports.onReportFinalized = notifyAfter(
   async ({ req, body, actor, ip, study_id }) => {
     const doctorId = await getDoctorFromStudy(study_id);
+    const receptionistId = await getReceptionistFromStudy(study_id);
+    const adminIds = await getUsersByRole("Admin");
+
     if (doctorId) {
       await notifService.createNotification({
         user_id: doctorId,
@@ -155,6 +197,23 @@ exports.onReportFinalized = notifyAfter(
         study_id,
       });
     }
+
+    if (receptionistId && receptionistId !== doctorId) {
+      await notifService.createNotification({
+        user_id: receptionistId,
+        type: "report_signed",
+        title: "Report Finalized",
+        message: `Report for study #${study_id} has been signed and the study is now completed.`,
+        study_id,
+      });
+    }
+
+    await notifyMany(adminIds, {
+      type: "report_signed",
+      title: "Report Downloaded",
+      message: `${actor.actor_name} signed and finalized report for study #${study_id}`,
+      study_id,
+    });
 
     await auditService.log({
       ...actor,
@@ -167,16 +226,58 @@ exports.onReportFinalized = notifyAfter(
   },
 );
 
+// ---------- Report Downloaded/Exported ----------
+// Notifies: Admins only
+exports.onReportAccess = async (req, res, next) => {
+  res.on("finish", async () => {
+    if (res.statusCode === 200) {
+      const actor = getActor(req);
+      const study_id = req.params?.study_id;
+      const adminIds = await getUsersByRole("Admin");
+
+      await notifyMany(adminIds, {
+        type: "report_downloaded",
+        title: "Report Exported",
+        message: `${actor.actor_name} (${actor.actor_role}) exported the PDF report for study #${study_id}`,
+        study_id,
+      });
+
+      auditService.log({
+        ...actor,
+        action: "EXPORT",
+        entity: "Report",
+        entity_id: study_id,
+        description: `Report PDF exported for study ${study_id}`,
+        ip_address: req.ip,
+      });
+    }
+  });
+  next();
+};
+
 // ---------- Image Uploaded ----------
+// Notifies: Doctor + Receptionist
 exports.onImageUpload = notifyAfter(
   async ({ req, body, actor, ip, study_id }) => {
     const doctorId = await getDoctorFromStudy(study_id);
+    const receptionistId = await getReceptionistFromStudy(study_id);
+
     if (doctorId) {
       await notifService.createNotification({
         user_id: doctorId,
         type: "image_uploaded",
         title: "Images Uploaded",
         message: `${body.count} image(s) uploaded to study #${study_id}`,
+        study_id,
+      });
+    }
+
+    if (receptionistId && receptionistId !== doctorId) {
+      await notifService.createNotification({
+        user_id: receptionistId,
+        type: "image_uploaded",
+        title: "Images Uploaded",
+        message: `${body.count} image(s) were uploaded to study #${study_id}`,
         study_id,
       });
     }
@@ -193,20 +294,43 @@ exports.onImageUpload = notifyAfter(
 );
 
 // ---------- Patient Registered ----------
+// Notifies: Doctor + Receptionist (confirmation) + Admins
 exports.onPatientRegister = notifyAfter(async ({ req, body, actor, ip }) => {
   const doctorId = body.patient?.doctor_id;
   const patientId = body.patient?.national_id;
+  const studyId = body.study?.study_id;
+  const adminIds = await getUsersByRole("Admin");
 
   if (doctorId) {
     await notifService.createNotification({
       user_id: doctorId,
       type: "patient_registered",
       title: "New Patient Assigned",
-      message: `Patient ${body.patient?.first_name} ${body.patient?.last_name} (${patientId}) assigned to you with study #${body.study?.study_id}`,
+      message: `Patient ${body.patient?.first_name} ${body.patient?.last_name} (${patientId}) assigned to you with study #${studyId}`,
       patient_id: patientId,
-      study_id: body.study?.study_id,
+      study_id: studyId,
     });
   }
+
+  // Confirmation to the receptionist who registered
+  if (actor.actor_id) {
+    await notifService.createNotification({
+      user_id: actor.actor_id,
+      type: "patient_registered",
+      title: "Patient Registered Successfully",
+      message: `Patient ${body.patient?.first_name} ${body.patient?.last_name} (${patientId}) has been registered and assigned to Dr. ${body.patient?.doctor_name}`,
+      patient_id: patientId,
+      study_id: studyId,
+    });
+  }
+
+  await notifyMany(adminIds, {
+    type: "patient_registered",
+    title: "New Patient Registered",
+    message: `${actor.actor_name} registered patient ${body.patient?.first_name} ${body.patient?.last_name} (${patientId})`,
+    patient_id: patientId,
+    study_id: studyId,
+  });
 
   await auditService.log({
     ...actor,
@@ -219,6 +343,7 @@ exports.onPatientRegister = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- Patient Updated ----------
+// Notifies: Admins
 exports.onPatientUpdate = notifyAfter(
   async ({ req, body, actor, ip, national_id }) => {
     await auditService.log({
@@ -232,9 +357,19 @@ exports.onPatientUpdate = notifyAfter(
   },
 );
 
-// ---------- Patient Deleted (soft) ----------
+// ---------- Patient Deactivated (soft delete) ----------
+// Notifies: Admins + Receptionist who deleted
 exports.onPatientDelete = notifyAfter(
   async ({ req, body, actor, ip, national_id }) => {
+    const adminIds = await getUsersByRole("Admin");
+
+    await notifyMany(adminIds, {
+      type: "patient_deactivated",
+      title: "Patient Deactivated",
+      message: `${actor.actor_name} deactivated patient #${national_id}`,
+      patient_id: national_id,
+    });
+
     await auditService.log({
       ...actor,
       action: "PATIENT_DEACTIVATE",
@@ -246,21 +381,69 @@ exports.onPatientDelete = notifyAfter(
   },
 );
 
+// ---------- Patient Status → Completed ----------
+// Notifies: Receptionist who created the study
+exports.onPatientCompleted = notifyAfter(
+  async ({ req, body, actor, ip, study_id, national_id }) => {
+    const receptionistId = await getReceptionistFromStudy(study_id);
+
+    if (receptionistId) {
+      await notifService.createNotification({
+        user_id: receptionistId,
+        type: "patient_completed",
+        title: "Patient Study Completed",
+        message: `Study #${study_id} for patient #${national_id} has been marked as completed.`,
+        study_id,
+        patient_id: national_id,
+      });
+    }
+
+    await auditService.log({
+      ...actor,
+      action: "PATIENT_COMPLETED",
+      entity: "Patient",
+      entity_id: national_id,
+      description: `Study #${study_id} marked as completed for patient ${national_id}`,
+      ip_address: ip,
+    });
+  },
+);
+
 // ---------- Doctor Reassigned ----------
+// Notifies: New Doctor + Receptionist + Admins
 exports.onDoctorReassign = notifyAfter(
   async ({ req, body, actor, ip, national_id }) => {
     const newDoctorId = req.body?.doctor_id;
+    const studyId = body.study?.study_id;
+    const adminIds = await getUsersByRole("Admin");
+    const receptionistIds = await getUsersByRole("Receptionist");
 
     if (newDoctorId) {
       await notifService.createNotification({
         user_id: newDoctorId,
         type: "doctor_reassigned",
         title: "Patient Assigned to You",
-        message: `Patient ${national_id} has been reassigned to you with a new study #${body.study?.study_id}`,
+        message: `Patient ${national_id} has been reassigned to you with a new study #${studyId}`,
         patient_id: national_id,
-        study_id: body.study?.study_id,
+        study_id: studyId,
       });
     }
+
+    await notifyMany(adminIds, {
+      type: "doctor_reassigned",
+      title: "Doctor Reassigned",
+      message: `${actor.actor_name} reassigned patient #${national_id} to Doctor #${newDoctorId}`,
+      patient_id: national_id,
+      study_id: studyId,
+    });
+
+    await notifyMany(receptionistIds, {
+      type: "doctor_reassigned",
+      title: "Doctor Reassigned",
+      message: `Patient #${national_id} has been reassigned to a new doctor (study #${studyId})`,
+      patient_id: national_id,
+      study_id: studyId,
+    });
 
     await auditService.log({
       ...actor,
@@ -274,7 +457,16 @@ exports.onDoctorReassign = notifyAfter(
 );
 
 // ---------- User Created ----------
+// Notifies: Admins
 exports.onUserCreate = notifyAfter(async ({ req, body, actor, ip }) => {
+  const adminIds = await getUsersByRole("Admin");
+
+  await notifyMany(adminIds, {
+    type: "user_created",
+    title: "New User Created",
+    message: `${actor.actor_name} created a new ${req.body?.role_name} account for ${req.body?.email}`,
+  });
+
   await auditService.log({
     ...actor,
     action: "USER_CREATE",
@@ -286,7 +478,16 @@ exports.onUserCreate = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- User Deactivated ----------
+// Notifies: Admins
 exports.onUserDeactivate = notifyAfter(async ({ req, body, actor, ip }) => {
+  const adminIds = await getUsersByRole("Admin");
+
+  await notifyMany(adminIds, {
+    type: "user_deactivated",
+    title: "User Deactivated",
+    message: `${actor.actor_name} deactivated user #${req.params?.id}`,
+  });
+
   await auditService.log({
     ...actor,
     action: "USER_DEACTIVATE",
@@ -298,7 +499,16 @@ exports.onUserDeactivate = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- User Reactivated ----------
+// Notifies: Admins
 exports.onUserReactivate = notifyAfter(async ({ req, body, actor, ip }) => {
+  const adminIds = await getUsersByRole("Admin");
+
+  await notifyMany(adminIds, {
+    type: "user_reactivated",
+    title: "User Reactivated",
+    message: `${actor.actor_name} reactivated user #${req.params?.id}`,
+  });
+
   await auditService.log({
     ...actor,
     action: "USER_REACTIVATE",
@@ -309,8 +519,60 @@ exports.onUserReactivate = notifyAfter(async ({ req, body, actor, ip }) => {
   });
 });
 
+// ---------- Profile Updated (any role) ----------
+// Notifies: Admins
+exports.onProfileUpdate = notifyAfter(async ({ req, body, actor, ip }) => {
+  const adminIds = await getUsersByRole("Admin");
+  const changedFields = Object.keys(req.body || {}).join(", ");
+
+  await notifyMany(adminIds, {
+    type: "profile_updated",
+    title: "Profile Updated",
+    message: `${actor.actor_name} (${actor.actor_role}) updated their profile. Fields: ${changedFields}`,
+  });
+
+  await auditService.log({
+    ...actor,
+    action: "PROFILE_UPDATE",
+    entity: "User",
+    entity_id: String(actor.actor_id),
+    description: `${actor.actor_name} updated profile. Fields: ${changedFields}`,
+    ip_address: ip,
+  });
+});
+
+// ---------- Password Changed (any role) ----------
+// Notifies: Admins
+exports.onPasswordChange = notifyAfter(async ({ req, body, actor, ip }) => {
+  const adminIds = await getUsersByRole("Admin");
+
+  await notifyMany(adminIds, {
+    type: "password_changed",
+    title: "Password Changed",
+    message: `${actor.actor_name} (${actor.actor_role}) changed their password`,
+  });
+
+  await auditService.log({
+    ...actor,
+    action: "PASSWORD_CHANGE",
+    entity: "User",
+    entity_id: String(actor.actor_id),
+    description: `${actor.actor_name} changed their password`,
+    ip_address: ip,
+  });
+});
+
 // ---------- Patients Transferred ----------
+// Notifies: Admins
 exports.onPatientsTransfer = notifyAfter(async ({ req, body, actor, ip }) => {
+  const adminIds = await getUsersByRole("Admin");
+
+  await notifyMany(adminIds, {
+    type: "patients_transferred",
+    title: "Patients Transferred",
+    message: `${actor.actor_name} transferred all patients from Doctor #${req.body?.oldDoctor} to Doctor #${req.body?.newDoctor}`,
+  });
+
   await auditService.log({
     ...actor,
     action: "PATIENTS_TRANSFER",
@@ -320,6 +582,25 @@ exports.onPatientsTransfer = notifyAfter(async ({ req, body, actor, ip }) => {
     ip_address: ip,
   });
 });
+
+// ---------- Failed Login / Suspicious IP ----------
+// Notifies: Admins — called from your security/auth logic directly
+exports.onFailedLogin = async ({ ip_address, email, attempts }) => {
+  try {
+    const adminIds = await getUsersByRole("Admin");
+    const isDangerous = attempts >= 5;
+
+    await notifyMany(adminIds, {
+      type: isDangerous ? "suspicious_ip" : "failed_login",
+      title: isDangerous ? "⚠️ Suspicious IP Detected" : "Failed Login Attempt",
+      message: isDangerous
+        ? `Suspicious activity: ${attempts} failed login attempts from IP ${ip_address} for account ${email}`
+        : `Failed login attempt for ${email} from IP ${ip_address}`,
+    });
+  } catch (err) {
+    console.error("⚠️ onFailedLogin notify error:", err.message);
+  }
+};
 
 // ---------- Login ----------
 exports.onLogin = async (req, res, next) => {
@@ -361,7 +642,7 @@ exports.onLogout = async (req, res, next) => {
   next();
 };
 
-// Called when doctor serves an image
+// ---------- Image Accessed ----------
 exports.onImageAccess = async (req, res, next) => {
   res.on("finish", () => {
     if (res.statusCode === 200) {
@@ -374,26 +655,6 @@ exports.onImageAccess = async (req, res, next) => {
         entity: "Image",
         entity_id: req.params.image_id,
         description: `Image viewed for study ${req.params.study_id}`,
-        ip_address: req.ip,
-      });
-    }
-  });
-  next();
-};
-
-// Called when doctor exports/views a PDF report
-exports.onReportAccess = async (req, res, next) => {
-  res.on("finish", () => {
-    if (res.statusCode === 200) {
-      auditService.log({
-        actor_id: req.user?.id,
-        actor_name:
-          `${req.user?.first_name || ""} ${req.user?.last_name || ""}`.trim(),
-        actor_role: req.user?.role,
-        action: "EXPORT",
-        entity: "Report",
-        entity_id: req.params.study_id,
-        description: `Report PDF exported for study ${req.params.study_id}`,
         ip_address: req.ip,
       });
     }
