@@ -91,12 +91,12 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
     }),
   );
 
-  // Mark study as viewed once media is uploaded
+  // ================= UPDATE STUDY STATUS [edited by farah] =================
   await db.query(
     `UPDATE studies
-     SET status = 'In Progress'
-     WHERE study_id = ?
-       AND status IN ('Scheduled', 'In Progress')`,
+   SET status = 'Pending'
+   WHERE study_id = ?
+     AND status = 'Scheduled'`,
     [study_id],
   );
 

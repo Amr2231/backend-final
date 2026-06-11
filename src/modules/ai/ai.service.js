@@ -147,21 +147,19 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
     // ======================================
     // 4. CALL AI SERVICE
     // ======================================
-    const AI_URL = process.env.AI_SERVICE_URL || "http://localhost:5000";
+    const AI_URL = process.env.AI_SERVICE_URL || "http://localhost:8080";
 
-    const response = await axios.post(
-      `${AI_URL}/analyze`,
-      {
-        file_path: filePath,
-        file_type: fileType,
-      },
-      {
-        timeout: 120000,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    const FormData = require("form-data");
+    const form = new FormData();
+    form.append("file", fs.createReadStream(filePath), path.basename(filePath));
+    form.append("file_type", fileType);
+
+    const response = await axios.post(`${AI_URL}/analyze`, form, {
+      headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      timeout: 120000,
+    });
 
     const result = response.data;
 
