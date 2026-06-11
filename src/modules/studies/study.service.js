@@ -94,9 +94,9 @@ exports.uploadImages = async (study_id, files, doctor_id, view_type) => {
   // Mark study as viewed once media is uploaded
   await db.query(
     `UPDATE studies
-     SET status = 'Viewed'
+     SET status = 'In Progress'
      WHERE study_id = ?
-       AND status IN ('Scheduled', 'Pending', 'In Progress')`,
+       AND status IN ('Scheduled', 'In Progress')`,
     [study_id],
   );
 
@@ -329,7 +329,6 @@ exports.deleteStudyNote = async (study_id, note_id) => {
   };
 };
 
-
 // ================= DELETE IMAGE [created by farah] =================
 exports.deleteImage = async (study_id, image_id, doctor_id) => {
   const [image] = await db.query(
@@ -340,7 +339,7 @@ exports.deleteImage = async (study_id, image_id, doctor_id) => {
      WHERE i.image_id = ?
        AND i.study_id = ?
        AND p.doctor_id = ?`,
-    [image_id, study_id, doctor_id]
+    [image_id, study_id, doctor_id],
   );
 
   if (!image.length) {
