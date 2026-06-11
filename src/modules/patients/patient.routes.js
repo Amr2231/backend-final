@@ -86,10 +86,27 @@ router.patch(
 router.get("/recent", auth, role("Doctor"), controller.getRecentPatients);
 
 // Resolve patient context by study id (includes completed studies)
-router.get(
-  "/study/:study_id",
+router.get("/study/:study_id", auth, role("Doctor"), controller.getByStudyId);
+
+// Mark patient study as completed — notifies Receptionist
+router.patch(
+  "/:national_id/complete",
   auth,
-  role("Doctor"),
-  controller.getByStudyId,
+  role("Doctor", "Receptionist"),
+  notify.onPatientCompleted,
+  controller.complete,
+);
+
+// ======================================================
+// ADMIN
+// ======================================================
+
+router.get("/deactivated", auth, role("Admin"), controller.getDeactivated);
+
+router.patch(
+  "/:national_id/reactivate",
+  auth,
+  role("Admin"),
+  controller.reactivate,
 );
 module.exports = router;

@@ -3,7 +3,6 @@ const { getClientIp } = require("../../utils/ip");
 
 // LOGIN
 exports.login = async (req, res, next) => {
-  console.log("LOGIN CONTROLLER HIT");
   try {
     const data = await service.login(
       req.body.email,
@@ -17,12 +16,21 @@ exports.login = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     });
     res.json({
+      success: true,
       message: data.message,
       token: data.token,
       refreshToken: data.refreshToken,
       user: data.user,
     }); // farah edit by add user data in response for better frontend handling
   } catch (err) {
+    // Notify admins on failed login [added by farah]
+    if (err.status === 401) {
+      await onFailedLogin({
+        ip_address: getClientIp(req),
+        email: req.body?.email,
+        attempts: 1,
+      }).catch(() => {});
+    }
     next(err);
   }
 };

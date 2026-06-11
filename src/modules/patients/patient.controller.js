@@ -1,6 +1,5 @@
 const service = require("./patient.service");
 
-
 exports.register = async (req, res) => {
   try {
     const result = await service.registerPatientWithStudy(req.body);
@@ -53,6 +52,42 @@ exports.delete = async (req, res, next) => {
   }
 };
 
+// ================= COMPLETE (marks latest study as Completed) [created by farah] =================
+exports.complete = async (req, res, next) => {
+  try {
+    const { national_id } = req.params;
+    const db = require("../../config/db");
+
+    const [study] = await db.query(
+      `SELECT study_id FROM studies
+       WHERE national_id = ? AND status != 'Completed'
+       ORDER BY study_date DESC LIMIT 1`,
+      [national_id],
+    );
+
+    if (!study.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No active study found for this patient",
+      });
+    }
+
+    await db.query(
+      `UPDATE studies SET status = 'Completed' WHERE study_id = ?`,
+      [study[0].study_id],
+    );
+
+    res.json({
+      success: true,
+      message: "Patient study marked as completed",
+      study_id: study[0].study_id,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 // ================= Query Patients =================
 exports.queryPatients = async (req, res) => {
   try {
@@ -104,14 +139,15 @@ exports.getActive = async (req, res, next) => {
 // ================= UC-36 Historical Patients =================
 exports.getHistory = async (req, res, next) => {
   try {
-    const { page, limit, keyword, study_type, date, sort , report_status  } = req.query; // farah edit by add keyword, study_type, date , sort query param and report_status 
+    const { page, limit, keyword, study_type, date, sort, report_status } =
+      req.query; // farah edit by add keyword, study_type, date , sort query param and report_status
 
     const data = await service.getHistoricalPatients(page, limit, {
       keyword,
       study_type,
       date,
       sort, // farah edit by add keyword, study_type, date , sort query param
-      report_status , // farah edit by add report_status
+      report_status, // farah edit by add report_status
     });
 
     res.json({
@@ -172,7 +208,8 @@ exports.reassignDoctor = async (req, res, next) => {
 
 exports.getAssigned = async (req, res, next) => {
   try {
-    const { page, limit, keyword, study_type, date, sort , report_status } = req.query; // farah edit by add report_status
+    const { page, limit, keyword, study_type, date, sort, report_status } =
+      req.query; // farah edit by add report_status
 
     const data = await service.getAssignedPatients(req.user.id, page, limit, {
       keyword,
@@ -212,22 +249,30 @@ exports.reactivate = async (req, res, next) => {
   }
 };
 
-
 // ================= GET DOCTOR HISTORICAL PATIENTS (doctor) [created by farah] =================
 exports.getDoctorHistory = async (req, res, next) => {
   try {
-    const { page, limit, keyword, study_type, date, sort, report_status } = req.query;
+    const { page, limit, keyword, study_type, date, sort, report_status } =
+      req.query;
 
-    const data = await service.getDoctorHistoricalPatients(req.user.id, page, limit, {
-      keyword, study_type, date, sort, report_status,
-    });
+    const data = await service.getDoctorHistoricalPatients(
+      req.user.id,
+      page,
+      limit,
+      {
+        keyword,
+        study_type,
+        date,
+        sort,
+        report_status,
+      },
+    );
 
     res.json(data);
   } catch (err) {
     next(err);
   }
 };
-
 
 // ================ GET RECENT PATIENTS (doctor) [created by farah] =================
 exports.getRecentPatients = async (req, res, next) => {

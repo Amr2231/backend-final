@@ -19,9 +19,6 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post("/login", controller.login); // added by farah
-router.post("/refresh-token", controller.refreshToken); //added by farah
-router.post("/logout", notify.onLogout, controller.logout); // added by farah
 // added limit for routes by farah
 const forgotPasswordLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -33,8 +30,20 @@ const forgotPasswordLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-router.post("/forgot-password", forgotPasswordLimiter, controller.forgotPassword);
+router.post("/login", notify.onLogin, controller.login); // added by farah
+router.post("/refresh-token", controller.refreshToken); //added by farah
+router.post("/logout", notify.onLogout, controller.logout); // added by farah
+router.post(
+  "/forgot-password",
+  forgotPasswordLimiter,
+  controller.forgotPassword,
+);
 router.post("/reset-password", controller.resetPassword);
-router.patch("/change-password", verifyToken, controller.changePassword);
+router.patch(
+  "/change-password",
+  verifyToken,
+  notify.onChangePassword,
+  controller.changePassword,
+);
 
 module.exports = router;
