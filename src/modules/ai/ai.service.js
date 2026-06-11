@@ -113,24 +113,24 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
       return { message: "No file found", data: null };
     }
 
-    let filePath = path.resolve(imageRows[0].file_path);
+    // ✅ صلّح الـ path من backslash لـ forward slash
+    const rawPath = imageRows[0].file_path.replace(/\\/g, "/");
+    let filePath = path.resolve(rawPath);
     const fileType = getFileType(filePath);
 
     if (fileType !== "video") {
       throw {
         status: 422,
-        message:
-          "AI analysis supports video files only. Images can be uploaded and viewed but cannot be analyzed.",
+        message: "AI analysis supports video files only.",
       };
     }
 
     if (!fs.existsSync(filePath)) {
-      return {
-        message: "File not found on disk",
-        data: null,
-      };
+      return { message: "File not found on disk", data: null };
     }
 
+    console.log("📂 FILE:", filePath);
+    console.log("📦 TYPE:", fileType);
     // ======================================
     // 3. DETECT FILE TYPE
     // ======================================
