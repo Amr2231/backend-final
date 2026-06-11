@@ -93,24 +93,6 @@ exports.openReport = async (study_id) => {
 
   const assignedDoctorId = studyRows[0].doctor_id;
 
-  // ======================================================
-  // CHECK IMAGES EXIST
-  // ======================================================
-  // const [images] = await db.query(
-  //   `
-  //   SELECT image_id
-  //   FROM Images
-  //   WHERE study_id = ?
-  //   `,
-  //   [study_id],
-  // );
-
-  // if (!images.length) {
-  //   throw {
-  //     status: 400,
-  //     message: "Cannot open report before uploading study images",
-  //   };
-  // }
 
   // ======================================================
   // CHECK EXISTING REPORT
@@ -127,7 +109,8 @@ exports.openReport = async (study_id) => {
   // ======================================================
   // CREATE REPORT
   // ======================================================
-  if (!existing.length) {
+  if (!existing.length) { 
+    // edit by farah by add not written status instead of written
     await db.query(
       `
       INSERT INTO reports
@@ -137,14 +120,10 @@ exports.openReport = async (study_id) => {
         report_status,
         report_content
       )
-      VALUES (?, ?, 'Written', '')
+      VALUES (?, ?, 'Not Written', '')
       `,
       [study_id, assignedDoctorId],
     );
-    // UPDATE STUDY [created by farah]
-    await db.query(`UPDATE studies SET status='In Progress' WHERE study_id=?`, [
-      study_id,
-    ]);
   }
 
   // ======================================================
@@ -197,7 +176,7 @@ exports.autoSaveReport = async (study_id, content) => {
     throw { status: 400, message: "Cannot edit finalized report" };
   }
 
-  await db.query(`UPDATE reports SET report_content=? WHERE study_id=?`, [
+  await db.query(`UPDATE reports SET report_content=? , report_status='Written' WHERE study_id=?`, [
     content,
     study_id,
   ]);
