@@ -158,7 +158,7 @@ exports.runAIAnalysis = async (study_id, image_id = null) => {
       headers: form.getHeaders(),
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
-      timeout: 120000,
+      timeout: 300000,
     });
 
     const result = response.data;
