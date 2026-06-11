@@ -53,15 +53,6 @@ exports.getPatientThreads = async (req, res, next) => {
   }
 };
 
-exports.setTyping = async (req, res, next) => {
-  try {
-    await service.setTyping(req.user.id, req.body.typing_to_user_id);
-    res.json({ success: true });
-  } catch (err) {
-    next(err);
-  }
-};
-
 exports.searchUsers = async (req, res, next) => {
   try {
     const result = await service.searchUsers(

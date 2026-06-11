@@ -76,7 +76,10 @@ exports.setDoctorStatus = async (doctorId, status, appointmentId = null) => {
     );
   }
 
-  realtime.emit(realtime.CHANNELS.AVAILABILITY, { doctor_id: doctorId, status });
+  realtime.emit(realtime.CHANNELS.AVAILABILITY, {
+    doctor_id: doctorId,
+    status,
+  });
   return exports.getDoctorAvailability(doctorId);
 };
 
@@ -104,7 +107,10 @@ exports.updateDoctorStatus = async (doctorId, status, breakUntil, userId) => {
     [doctorId, status, breakUntil || null],
   );
 
-  realtime.emit(realtime.CHANNELS.AVAILABILITY, { doctor_id: doctorId, status });
+  realtime.emit(realtime.CHANNELS.AVAILABILITY, {
+    doctor_id: doctorId,
+    status,
+  });
 
   const notifService = require("../notification/notification.service");
   if (status === "On Leave" || status === "Break") {
@@ -125,27 +131,4 @@ exports.updateDoctorStatus = async (doctorId, status, breakUntil, userId) => {
   }
 
   return exports.getDoctorAvailability(doctorId);
-};
-
-exports.updatePresence = async (userId, isOnline, typingToUserId = null) => {
-  await db.query(
-    `INSERT INTO userpresence (user_id, is_online, last_seen_at, typing_to_user_id)
-     VALUES (?, ?, NOW(), ?)
-     ON DUPLICATE KEY UPDATE
-       is_online = VALUES(is_online),
-       last_seen_at = NOW(),
-       typing_to_user_id = VALUES(typing_to_user_id)`,
-    [userId, isOnline ? 1 : 0, typingToUserId],
-  );
-};
-
-exports.getPresence = async (userIds) => {
-  if (!userIds?.length) return { data: [] };
-  const placeholders = userIds.map(() => "?").join(",");
-  const [rows] = await db.query(
-    `SELECT user_id, is_online, last_seen_at, typing_to_user_id
-     FROM userpresence WHERE user_id IN (${placeholders})`,
-    userIds,
-  );
-  return { data: rows };
 };

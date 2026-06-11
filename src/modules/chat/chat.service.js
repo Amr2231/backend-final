@@ -3,13 +3,8 @@ const db = require("../../config/db");
 const realtime = require("../reception/realtime.service");
 
 exports.sendMessage = async (sender_id, payload) => {
-  const {
-    receiver_id,
-    message,
-    patient_id,
-    appointment_id,
-    attachment_path,
-  } = payload;
+  const { receiver_id, message, patient_id, appointment_id, attachment_path } =
+    payload;
 
   if (!receiver_id) throw { status: 400, message: "receiver_id is required" };
   if (!message || !message.trim())
@@ -56,7 +51,13 @@ exports.sendMessage = async (sender_id, payload) => {
   return { message_id: result.insertId, message: "Message sent" };
 };
 
-exports.getConversation = async (user_id, other_id, page = 1, limit = 30, patient_id = null) => {
+exports.getConversation = async (
+  user_id,
+  other_id,
+  page = 1,
+  limit = 30,
+  patient_id = null,
+) => {
   page = parseInt(page);
   limit = parseInt(limit);
   if (page < 1) page = 1;
@@ -115,9 +116,8 @@ exports.getInbox = async (user_id) => {
        latest.created_at,
        latest.patient_id,
        latest.appointment_id,
-       unread.cnt AS unread_count,
-       COALESCE(up.is_online, 0) AS is_online
-     FROM users  u
+       unread.cnt AS unread_count
+     FROM users u
      JOIN roles r ON u.role_id = r.role_id
      JOIN (
        SELECT
@@ -139,7 +139,6 @@ exports.getInbox = async (user_id) => {
        WHERE receiver_id = ? AND is_read = 0
        GROUP BY sender_id
      ) unread ON unread.sender_id = u.user_id
-     LEFT JOIN userpresence up ON up.user_id = u.user_id
      WHERE u.user_id != ?
      ORDER BY latest.created_at DESC`,
     [user_id, user_id, user_id, user_id, user_id],
@@ -178,16 +177,6 @@ exports.getUnreadCount = async (user_id) => {
   return { unread: rows[0].total };
 };
 
-exports.setTyping = async (user_id, typing_to_user_id) => {
-  await db.query(
-    `INSERT INTO userpresence (user_id, is_online, typing_to_user_id, last_seen_at)
-     VALUES (?, 1, ?, NOW())
-     ON DUPLICATE KEY UPDATE typing_to_user_id = VALUES(typing_to_user_id), last_seen_at = NOW()`,
-    [user_id, typing_to_user_id || null],
-  );
-  realtime.emit(realtime.CHANNELS.CHAT, { type: "typing", user_id, typing_to_user_id });
-};
-
 exports.searchUsers = async (user_id, query = "", limit = 20) => {
   const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
   const params = [user_id];
@@ -212,11 +201,9 @@ exports.searchUsers = async (user_id, query = "", limit = 20) => {
        u.last_name,
        u.username,
        u.email,
-       r.role_name,
-       COALESCE(up.is_online, 0) AS is_online
+       r.role_name
      FROM users u
      JOIN roles r ON u.role_id = r.role_id
-     LEFT JOIN userpresence up ON up.user_id = u.user_id
      ${where}
      ORDER BY u.first_name, u.last_name
      LIMIT ?`,
