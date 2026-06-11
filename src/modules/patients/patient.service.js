@@ -854,6 +854,7 @@ SELECT
   `,
     [...params, limit, offset],
   );
+  console.log("sample status:", rows[0]?.status);
 
   // ===== COUNT [farah edit by add report_status] =====
   const [count] = await db.query(
