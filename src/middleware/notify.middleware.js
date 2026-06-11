@@ -31,11 +31,15 @@ function getIP(req) {
 async function getUsersByRole(role) {
   try {
     const [rows] = await db.query(
-      `SELECT user_id FROM users WHERE role_name = ? AND is_active = 1`,
+      `SELECT u.user_id 
+       FROM users u
+       JOIN roles r ON u.role_id = r.role_id
+       WHERE r.role_name = ? AND u.is_active = 1`,
       [role],
     );
     return rows.map((r) => r.user_id);
-  } catch {
+  } catch (err) {
+    console.error("⚠️ getUsersByRole error:", err.message);
     return [];
   }
 }
