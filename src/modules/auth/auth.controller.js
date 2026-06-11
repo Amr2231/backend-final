@@ -1,29 +1,31 @@
 const service = require("./auth.service");
 const { getClientIp } = require("../../utils/ip");
+const { onFailedLogin } = require("../../middleware/notify.middleware");
 
-// LOGIN
+// ================= LOGIN =================
 exports.login = async (req, res, next) => {
   try {
     const data = await service.login(
       req.body.email,
       req.body.password,
       getClientIp(req),
-    ); // The refresh token is in an httpOnly cookie (not accessible from JS) and secure (HTTPS) [added by farah]
+    );
+
     res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      secure: process.env.NODE_ENV === "production",
       sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+
     res.json({
       success: true,
       message: data.message,
       token: data.token,
       refreshToken: data.refreshToken,
       user: data.user,
-    }); // farah edit by add user data in response for better frontend handling
+    });
   } catch (err) {
-    // Notify admins on failed login [added by farah]
     if (err.status === 401) {
       await onFailedLogin({
         ip_address: getClientIp(req),
@@ -35,15 +37,12 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// ================= REFRESH TOKEN [created by farah] =================
+// ================= REFRESH TOKEN =================
 exports.refreshToken = async (req, res, next) => {
   try {
-    // The refresh token is coming from the cookie or the request body (for flexibility, but cookie is preferred for security)
     const token = req.cookies?.refreshToken || req.body?.refreshToken;
-
     const data = await service.refreshToken(token);
 
-    // Update the cookie with the new refresh token
     res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -53,7 +52,7 @@ exports.refreshToken = async (req, res, next) => {
 
     res.json({
       accessToken: data.accessToken,
-      refreshToken: data.refreshToken, // farah edit by add refresh token in response for better frontend handling (optional, since it's also in the cookie)
+      refreshToken: data.refreshToken,
     });
   } catch (err) {
     next(err);
@@ -64,24 +63,21 @@ exports.refreshToken = async (req, res, next) => {
 exports.logout = async (req, res, next) => {
   try {
     const token = req.cookies?.refreshToken;
-
     await service.logout(token);
 
-    // Delete the cookie
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "Strict",
     });
 
-    res.json({ message: "Logged out successfully" });
+    res.json({ success: true, message: "Logged out successfully" });
   } catch (err) {
     next(err);
   }
 };
 
-// Forgot
-
+// ================= FORGOT PASSWORD =================
 exports.forgotPassword = async (req, res) => {
   try {
     const result = await service.forgotPassword(req.body.email);
@@ -91,7 +87,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// RESET
+// ================= RESET PASSWORD =================
 exports.resetPassword = async (req, res, next) => {
   try {
     const result = await service.resetPassword(
@@ -105,11 +101,10 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-//  CHANGE PASSWORD
+// ================= CHANGE PASSWORD =================
 exports.changePassword = async (req, res) => {
   try {
-    const user_id = req.user.id; // from JWT middleware
-
+    const user_id = req.user.id;
     const { current_password, new_password, confirm_new_password } = req.body;
 
     const result = await service.changePassword(
@@ -125,7 +120,6 @@ exports.changePassword = async (req, res) => {
       error: err.error || "server_error",
       message: err.message || "Internal Server Error",
       field: err.field || null,
-      // next(err); // if you want to pass it to a global error handler instead of sending response here [commented out by farah]
     });
   }
 };

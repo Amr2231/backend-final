@@ -3,10 +3,8 @@ const rateLimit = require("express-rate-limit");
 
 const controller = require("./auth.controller");
 const notify = require("../../middleware/notify.middleware");
-// JWT middleware
 const verifyToken = require("../../middleware/auth.middleware");
 
-// Login rate limiter added by farah
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 3,
@@ -19,10 +17,9 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// added limit for routes by farah
 const forgotPasswordLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // 3 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 3,
   message: {
     success: false,
     message: "Too many requests. Please try again after 15 minutes.",
@@ -30,9 +27,10 @@ const forgotPasswordLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-router.post("/login", notify.onLogin, controller.login); // added by farah
-router.post("/refresh-token", controller.refreshToken); //added by farah
-router.post("/logout", notify.onLogout, controller.logout); // added by farah
+
+router.post("/login", notify.onLogin, controller.login);
+router.post("/refresh-token", controller.refreshToken);
+router.post("/logout", notify.onLogout, controller.logout);
 router.post(
   "/forgot-password",
   forgotPasswordLimiter,
@@ -42,7 +40,7 @@ router.post("/reset-password", controller.resetPassword);
 router.patch(
   "/change-password",
   verifyToken,
-  notify.onChangePassword,
+  notify.onPasswordChange,
   controller.changePassword,
 );
 
