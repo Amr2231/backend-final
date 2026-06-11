@@ -83,27 +83,38 @@ async function getReceptionistFromStudy(study_id) {
 
 // ==========================================
 // NOTIFY + AUDIT AFTER RESPONSE SENT
+// KEY FIX: use res.on("finish") instead of overriding res.json
 // ==========================================
 function notifyAfter(handler) {
-  return async (req, res, next) => {
-    const originalJson = res.json.bind(res);
-
-    res.json = async function (body) {
-      originalJson(body);
-
-      if (!body?.success) return;
+  return (req, res, next) => {
+    res.on("finish", () => {
+      // Only process successful responses
+      if (res.statusCode < 200 || res.statusCode >= 300) return;
 
       const actor = getActor(req);
       const ip = getIP(req);
-      const study_id = req.params?.study_id || body?.study_id || null;
+      const study_id = req.params?.study_id || req.body?.study_id || null;
       const national_id =
-        req.params?.national_id || body?.patient?.national_id || null;
+        req.params?.national_id || req.body?.patient?.national_id || null;
 
-      try {
-        await handler({ req, body, actor, ip, study_id, national_id });
-      } catch (err) {
-        console.error("⚠️ notify middleware error:", err.message);
-      }
+      // Fire and forget — non-blocking
+      handler({
+        req,
+        body: res._responseBody || {},
+        actor,
+        ip,
+        study_id,
+        national_id,
+      }).catch((err) =>
+        console.error("⚠️ notify middleware error:", err.message),
+      );
+    });
+
+    // Intercept res.json to capture the body
+    const originalJson = res.json.bind(res);
+    res.json = function (body) {
+      res._responseBody = body;
+      return originalJson(body);
     };
 
     next();
@@ -181,7 +192,6 @@ exports.onAIEdit = notifyAfter(async ({ req, body, actor, ip, study_id }) => {
 });
 
 // ---------- Report Signed ----------
-// Notifies: Doctor + Receptionist (who created the study) + Admins
 exports.onReportFinalized = notifyAfter(
   async ({ req, body, actor, ip, study_id }) => {
     const doctorId = await getDoctorFromStudy(study_id);
@@ -210,7 +220,7 @@ exports.onReportFinalized = notifyAfter(
 
     await notifyMany(adminIds, {
       type: "report_signed",
-      title: "Report Downloaded",
+      title: "Report Signed",
       message: `${actor.actor_name} signed and finalized report for study #${study_id}`,
       study_id,
     });
@@ -227,7 +237,6 @@ exports.onReportFinalized = notifyAfter(
 );
 
 // ---------- Report Downloaded/Exported ----------
-// Notifies: Admins only
 exports.onReportAccess = async (req, res, next) => {
   res.on("finish", async () => {
     if (res.statusCode === 200) {
@@ -248,7 +257,7 @@ exports.onReportAccess = async (req, res, next) => {
         entity: "Report",
         entity_id: study_id,
         description: `Report PDF exported for study ${study_id}`,
-        ip_address: req.ip,
+        ip_address: getIP(req),
       });
     }
   });
@@ -256,7 +265,6 @@ exports.onReportAccess = async (req, res, next) => {
 };
 
 // ---------- Image Uploaded ----------
-// Notifies: Doctor + Receptionist
 exports.onImageUpload = notifyAfter(
   async ({ req, body, actor, ip, study_id }) => {
     const doctorId = await getDoctorFromStudy(study_id);
@@ -294,7 +302,6 @@ exports.onImageUpload = notifyAfter(
 );
 
 // ---------- Patient Registered ----------
-// Notifies: Doctor + Receptionist (confirmation) + Admins
 exports.onPatientRegister = notifyAfter(async ({ req, body, actor, ip }) => {
   const doctorId = body.patient?.doctor_id;
   const patientId = body.patient?.national_id;
@@ -312,7 +319,6 @@ exports.onPatientRegister = notifyAfter(async ({ req, body, actor, ip }) => {
     });
   }
 
-  // Confirmation to the receptionist who registered
   if (actor.actor_id) {
     await notifService.createNotification({
       user_id: actor.actor_id,
@@ -343,7 +349,6 @@ exports.onPatientRegister = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- Patient Updated ----------
-// Notifies: Admins
 exports.onPatientUpdate = notifyAfter(
   async ({ req, body, actor, ip, national_id }) => {
     await auditService.log({
@@ -357,8 +362,7 @@ exports.onPatientUpdate = notifyAfter(
   },
 );
 
-// ---------- Patient Deactivated (soft delete) ----------
-// Notifies: Admins + Receptionist who deleted
+// ---------- Patient Deactivated ----------
 exports.onPatientDelete = notifyAfter(
   async ({ req, body, actor, ip, national_id }) => {
     const adminIds = await getUsersByRole("Admin");
@@ -382,7 +386,6 @@ exports.onPatientDelete = notifyAfter(
 );
 
 // ---------- Patient Status → Completed ----------
-// Notifies: Receptionist who created the study
 exports.onPatientCompleted = notifyAfter(
   async ({ req, body, actor, ip, study_id, national_id }) => {
     const receptionistId = await getReceptionistFromStudy(study_id);
@@ -410,7 +413,6 @@ exports.onPatientCompleted = notifyAfter(
 );
 
 // ---------- Doctor Reassigned ----------
-// Notifies: New Doctor + Receptionist + Admins
 exports.onDoctorReassign = notifyAfter(
   async ({ req, body, actor, ip, national_id }) => {
     const newDoctorId = req.body?.doctor_id;
@@ -457,7 +459,6 @@ exports.onDoctorReassign = notifyAfter(
 );
 
 // ---------- User Created ----------
-// Notifies: Admins
 exports.onUserCreate = notifyAfter(async ({ req, body, actor, ip }) => {
   const adminIds = await getUsersByRole("Admin");
 
@@ -478,7 +479,6 @@ exports.onUserCreate = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- User Deactivated ----------
-// Notifies: Admins
 exports.onUserDeactivate = notifyAfter(async ({ req, body, actor, ip }) => {
   const adminIds = await getUsersByRole("Admin");
 
@@ -499,7 +499,6 @@ exports.onUserDeactivate = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- User Reactivated ----------
-// Notifies: Admins
 exports.onUserReactivate = notifyAfter(async ({ req, body, actor, ip }) => {
   const adminIds = await getUsersByRole("Admin");
 
@@ -519,8 +518,7 @@ exports.onUserReactivate = notifyAfter(async ({ req, body, actor, ip }) => {
   });
 });
 
-// ---------- Profile Updated (any role) ----------
-// Notifies: Admins
+// ---------- Profile Updated ----------
 exports.onProfileUpdate = notifyAfter(async ({ req, body, actor, ip }) => {
   const adminIds = await getUsersByRole("Admin");
   const changedFields = Object.keys(req.body || {}).join(", ");
@@ -541,8 +539,7 @@ exports.onProfileUpdate = notifyAfter(async ({ req, body, actor, ip }) => {
   });
 });
 
-// ---------- Password Changed (any role) ----------
-// Notifies: Admins
+// ---------- Password Changed ----------
 exports.onPasswordChange = notifyAfter(async ({ req, body, actor, ip }) => {
   const adminIds = await getUsersByRole("Admin");
 
@@ -563,7 +560,6 @@ exports.onPasswordChange = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- Patients Transferred ----------
-// Notifies: Admins
 exports.onPatientsTransfer = notifyAfter(async ({ req, body, actor, ip }) => {
   const adminIds = await getUsersByRole("Admin");
 
@@ -584,7 +580,6 @@ exports.onPatientsTransfer = notifyAfter(async ({ req, body, actor, ip }) => {
 });
 
 // ---------- Failed Login / Suspicious IP ----------
-// Notifies: Admins — called from your security/auth logic directly
 exports.onFailedLogin = async ({ ip_address, email, attempts }) => {
   try {
     const adminIds = await getUsersByRole("Admin");
@@ -605,40 +600,60 @@ exports.onFailedLogin = async ({ ip_address, email, attempts }) => {
 // ---------- Login ----------
 exports.onLogin = async (req, res, next) => {
   const originalJson = res.json.bind(res);
-  res.json = async function (body) {
-    originalJson(body);
-    if (!body?.token) return;
-
-    const user = body.user;
-    await auditService.log({
-      actor_id: user?.id,
-      actor_name: `${user?.first_name || ""} ${user?.last_name || ""}`.trim(),
-      actor_role: user?.role,
-      action: "LOGIN",
-      entity: "User",
-      entity_id: String(user?.id),
-      description: `User logged in: ${user?.email}`,
-      ip_address: getIP(req),
-    });
+  res.json = function (body) {
+    res._responseBody = body;
+    return originalJson(body);
   };
+
+  res.on("finish", async () => {
+    try {
+      const body = res._responseBody;
+      if (!body?.token) return;
+
+      const user = body.user;
+      await auditService.log({
+        actor_id: user?.id,
+        actor_name: `${user?.first_name || ""} ${user?.last_name || ""}`.trim(),
+        actor_role: user?.role,
+        action: "LOGIN",
+        entity: "User",
+        entity_id: String(user?.id),
+        description: `User logged in: ${user?.email}`,
+        ip_address: getIP(req),
+      });
+    } catch (err) {
+      console.error("⚠️ onLogin audit error:", err.message);
+    }
+  });
+
   next();
 };
 
 // ---------- Logout ----------
 exports.onLogout = async (req, res, next) => {
   const actor = getActor(req);
+
   const originalJson = res.json.bind(res);
-  res.json = async function (body) {
-    originalJson(body);
-    await auditService.log({
-      ...actor,
-      action: "LOGOUT",
-      entity: "User",
-      entity_id: String(actor.actor_id),
-      description: `User logged out`,
-      ip_address: getIP(req),
-    });
+  res.json = function (body) {
+    res._responseBody = body;
+    return originalJson(body);
   };
+
+  res.on("finish", async () => {
+    try {
+      await auditService.log({
+        ...actor,
+        action: "LOGOUT",
+        entity: "User",
+        entity_id: String(actor.actor_id),
+        description: `User logged out`,
+        ip_address: getIP(req),
+      });
+    } catch (err) {
+      console.error("⚠️ onLogout audit error:", err.message);
+    }
+  });
+
   next();
 };
 
